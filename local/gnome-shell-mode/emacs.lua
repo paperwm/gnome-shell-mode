@@ -1,4 +1,4 @@
--- -*- mode: notion-wm; -*-
+-- -*- mode: gnome-shell; -*-
 
 emacs = {}
 

@@ -1,5 +1,5 @@
 * Ideas
-** notion-wm-repl-mode
+** gnome-shell-repl-mode
    Could be full blown, or simpler variant where output from evaled code was inserted below. (In that case a separate mode might be unnecessary
 * Possible tasks
 ** TODO make completion work inside string
@@ -7,7 +7,7 @@
 ** TODO use a mechanism (execution notionflux) that exposes the output from stderr too, allowing better user feedback
 * Bugs / weaknesses
 ** Only first return value of function is returned
-   Eg. when using notion-wm-cmd.
+   Eg. when using gnome-shell-cmd.
    Not sure if this is a bug in notionflux or not
 * WIP 
 ** Better documentation lookup by traversing the meta-table hierarchy

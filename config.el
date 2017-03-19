@@ -1,2 +1,2 @@
 
-(spacemacs|define-jump-handlers notion-wm-mode notion-wm-goto-definition)
+(spacemacs|define-jump-handlers gnome-shell-mode gnome-shell-goto-definition)

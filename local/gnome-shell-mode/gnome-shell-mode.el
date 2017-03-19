@@ -27,8 +27,8 @@
 ;; You need mod_notionflux-3 (at least from 2005-04-21)
 ;; mod_notionflux-3 can be found here: http://modeemi.fi/~tuomov/repos/
 
-;; Put the following in your .emacs to make the notion-wm-mode function available:
-;; (autoload 'notion-wm-mode "notion" "Major mode to edit notion config files" t)
+;; Put the following in your .emacs to make the gnome-shell-mode function available:
+;; (autoload 'gnome-shell-mode "notion" "Major mode to edit notion config files" t)
 
 ;; The latest version of notion.el can be found at http://www.xsteve.at/prg/emacs/notion.el
 
@@ -47,17 +47,17 @@
 ;; notion interaction via notionflux
 ;; --------------------------------------------------------------------------------
 
-(defvar notion-wm-display-target ":0"
+(defvar gnome-shell-display-target ":0"
   "The DISPLAY to target. Useful when debugging a separate notion in eg. a Xephyr server")
 
-(defconst notion-wm--lua-helper-path
+(defconst gnome-shell--lua-helper-path
   (concat (file-name-directory (or load-file-name buffer-file-name))
           "emacs.lua"))
 
-(defconst notion-wm-documentation-url
+(defconst gnome-shell-documentation-url
   "http://notion.sourceforge.net/notionconf/")
 
-(defun notion-wm--name-at-point ()
+(defun gnome-shell--name-at-point ()
   "Get current Name { ['.'|':'} Name } sequence."
   ;; Taken from lua-mode.el
   ;; NB: copying/modifying syntax table for each call may incur a penalty
@@ -66,10 +66,10 @@
     (modify-syntax-entry ?: "_")
     (current-word t)))
 
-(defun notion-wm-run-notionflux-interactively (cmd insert-result show-result)
+(defun gnome-shell-run-notionflux-interactively (cmd insert-result show-result)
   "Helper that handles common options relevant for interactive commands"
 
-  (let ((result (notion-wm-run-notionflux cmd)))
+  (let ((result (gnome-shell-run-notionflux cmd)))
 
     ;; notionflux return strings with line continuation
     (setq result (replace-regexp-in-string "\\\\$" "" result))
@@ -97,7 +97,7 @@
 
     result))
 
-(defun notion-wm-run-notionflux (cmd)
+(defun gnome-shell-run-notionflux (cmd)
   (let* ((wrapped (format "return emacs.eval(%s)" (lua-make-lua-string cmd)))
          (exit-code nil)
          (result nil))
@@ -109,14 +109,14 @@
       ;; with external processes.
 
       (insert (format "if emacs == undefined then loadfile('%s')() end\n"
-                      notion-wm--lua-helper-path))
+                      gnome-shell--lua-helper-path))
       (insert wrapped)
 
       ;; Call notion flux with the temp buffer content, replacing it with the
       ;; output. (both stdout and stderr)
       (setq exit-code
             (let ((process-environment process-environment))
-              (setenv "DISPLAY" notion-wm-display-target)
+              (setenv "DISPLAY" gnome-shell-display-target)
               (call-process-region (point-min) (point-max) "notionflux" t t)))
       (setq result (buffer-string))
       (when (< 0 exit-code)
@@ -124,23 +124,23 @@
       result)
     ))
 
-(defun notion-wm-send-string (str)
+(defun gnome-shell-send-string (str)
   "Send STR to notion, using the notionflux program."
-  (notion-wm-run-notionflux str))
+  (gnome-shell-run-notionflux str))
 
-(defun notion-wm-send-region (start end &optional insert-result)
+(defun gnome-shell-send-region (start end &optional insert-result)
   "Send send the region to notion, using the notionflux program."
   (interactive "r\nP")
-  (notion-wm-run-notionflux-interactively (buffer-substring start end)
+  (gnome-shell-run-notionflux-interactively (buffer-substring start end)
                                           insert-result (called-interactively-p)))
 
-(defun notion-wm-send-current-line (&optional insert-result)
+(defun gnome-shell-send-current-line (&optional insert-result)
   "Send send the actual line to notion, using the notionflux program."
   (interactive "P")
-  (notion-wm-run-notionflux-interactively (buffer-substring (line-beginning-position) (line-end-position))
+  (gnome-shell-run-notionflux-interactively (buffer-substring (line-beginning-position) (line-end-position))
                                           insert-result (called-interactively-p)))
 
-(defun notion-wm-repl ()
+(defun gnome-shell-repl ()
   (interactive)
   (let (a b)
     (if (region-active-p)
@@ -177,10 +177,10 @@
           (when assigned-variable
             (setq cmd (concat cmd " return " assigned-variable)))
 
-          (notion-wm-run-notionflux-interactively cmd t nil)))
+          (gnome-shell-run-notionflux-interactively cmd t nil)))
       )))
 
-(defun notion-wm-send-proc ()
+(defun gnome-shell-send-proc ()
   "Send proc around point to notion."
   (interactive)
   (let (start end)
@@ -189,56 +189,56 @@
       (setq start (point))
       (lua-end-of-proc)
       (setq end (point)))
-    (notion-wm-send-region start end)))
+    (gnome-shell-send-region start end)))
 
-(defun notion-wm-send-buffer ()
+(defun gnome-shell-send-buffer ()
   "Send send the buffer content to notion, using the notionflux program."
   (interactive)
-  (notion-wm-send-region (point-min) (point-max)))
+  (gnome-shell-send-region (point-min) (point-max)))
 
 
-(defun notion-wm-cmd (cmd &optional insert-result)
+(defun gnome-shell-cmd (cmd &optional insert-result)
   "Send a command to notion.
 The command is prefixed by a return statement."
   (interactive "sNotion cmd: \nP")
-  (notion-wm-run-notionflux-interactively cmd insert-result (called-interactively-p)))
+  (gnome-shell-run-notionflux-interactively cmd insert-result (called-interactively-p)))
 
 
 ;; --------------------------------------------------------------------------------
-;; Utility functions that need notion-wm-emacs.lua
+;; Utility functions that need gnome-shell-emacs.lua
 ;; --------------------------------------------------------------------------------
 
-(defun notion-wm-client-list ()
+(defun gnome-shell-client-list ()
   "Return the list of the notion clients."
-  (let* ((s (notion-wm-cmd "emacs.list_clients()"))
+  (let* ((s (gnome-shell-cmd "emacs.list_clients()"))
          (s0 (substring s 1 (- (length s) 2)))
          (client-list (split-string s0 "\\\\\n")))
     client-list))
 
 
-;; (ido-completing-read "notion window: " (notion-wm-client-list) t t nil nil (car (notion-wm-client-list)))
+;; (ido-completing-read "notion window: " (gnome-shell-client-list) t t nil nil (car (gnome-shell-client-list)))
 
-(defun notion-wm-goto-client (name)
+(defun gnome-shell-goto-client (name)
   ;;(interactive (list (ido-completing-read "select: " '("a" "aaab" "a/b" "a/b/c" "x/z"))))
-  (interactive (list (ido-completing-read "select: " (notion-wm-client-list))))
-  (notion-wm-send-string (concat "WRegion.goto(ioncore.lookup_clientwin(\"" name "\"))")))
+  (interactive (list (ido-completing-read "select: " (gnome-shell-client-list))))
+  (gnome-shell-send-string (concat "WRegion.goto(ioncore.lookup_clientwin(\"" name "\"))")))
 
-(defun notion-wm-look-up-notion-function-at-point ()
+(defun gnome-shell-look-up-notion-function-at-point ()
   (interactive)
   ;; Documentation still uses ioncore instead of notioncore
   (let* ((funcname (replace-regexp-in-string "^notioncore\\." "ioncore."
-                                             (notion-wm--name-at-point)))
+                                             (gnome-shell--name-at-point)))
          (lua-req (format "return emacs.canonical_funcname(\"%s\")" funcname))
-         (canonical-funcname (read (notion-wm-send-string lua-req))) ;; CLEANUP
-         (url (concat notion-wm-documentation-url
+         (canonical-funcname (read (gnome-shell-send-string lua-req))) ;; CLEANUP
+         (url (concat gnome-shell-documentation-url
                       "node7.html#fn:" canonical-funcname)))
     (browse-url url))
   )
 
-(defun notion-wm-eldoc (function-name)
-  (read (notion-wm-send-string (format "return emacs.eldoc(\"%s\")" function-name))))
+(defun gnome-shell-eldoc (function-name)
+  (read (gnome-shell-send-string (format "return emacs.eldoc(\"%s\")" function-name))))
 
-(defun notion-wm--resolve-lua-source-file (relative-path)
+(defun gnome-shell--resolve-lua-source-file (relative-path)
   ;; Byte compiled lua files contain file _name_ at best
   (let* ((candidates
           (remove-if-not (lambda (project-file-path)
@@ -251,10 +251,10 @@ The command is prefixed by a return statement."
         (concat (projectile-project-root) project-file)
       (helm-find-files-1 relative-path))))
 
-(defun notion-wm-goto-definition (function-name)
-  (interactive (list (notion-wm--name-at-point)))
+(defun gnome-shell-goto-definition (function-name)
+  (interactive (list (gnome-shell--name-at-point)))
   ;; Hackety-hack...
-  (let* ((raw (notion-wm-send-string (format "return emacs.defined_at(\"%s\")" function-name)))
+  (let* ((raw (gnome-shell-send-string (format "return emacs.defined_at(\"%s\")" function-name)))
          (as-string (and raw (read raw)))
          (location (and as-string (read as-string))))
 
@@ -263,7 +263,7 @@ The command is prefixed by a return statement."
              (line-number   (cadr location))
              (resolved-path (if (file-name-absolute-p path)
                                 path
-                              (notion-wm--resolve-lua-source-file path))))
+                              (gnome-shell--resolve-lua-source-file path))))
         (when resolved-path
           (find-file resolved-path)
           (goto-line line-number)
@@ -273,57 +273,57 @@ The command is prefixed by a return statement."
 ;; The notion edit mode, based on lua mode
 ;; --------------------------------------------------------------------------------
 
-(defvar notion-wm-mode-map () "Keymap used in `notion-wm-mode' buffers.")
+(defvar gnome-shell-mode-map () "Keymap used in `gnome-shell-mode' buffers.")
 
-(when (not notion-wm-mode-map)
-  (setq notion-wm-mode-map (make-sparse-keymap))
-  (define-key notion-wm-mode-map [(control ?c) (control ?p)] 'notion-wm-send-proc)
-  (define-key notion-wm-mode-map [(control ?c) (control ?r)] 'notion-wm-send-region)
-  (define-key notion-wm-mode-map [(control ?c) (control ?b)] 'notion-wm-send-buffer)
-  (define-key notion-wm-mode-map [(control ?c) (control ?l)] 'notion-wm-send-line)
-  (define-key notion-wm-mode-map (kbd "C-<return>") 'notion-wm-repl)
+(when (not gnome-shell-mode-map)
+  (setq gnome-shell-mode-map (make-sparse-keymap))
+  (define-key gnome-shell-mode-map [(control ?c) (control ?p)] 'gnome-shell-send-proc)
+  (define-key gnome-shell-mode-map [(control ?c) (control ?r)] 'gnome-shell-send-region)
+  (define-key gnome-shell-mode-map [(control ?c) (control ?b)] 'gnome-shell-send-buffer)
+  (define-key gnome-shell-mode-map [(control ?c) (control ?l)] 'gnome-shell-send-line)
+  (define-key gnome-shell-mode-map (kbd "C-<return>") 'gnome-shell-repl)
   )
 
-(easy-menu-define notion-wm-mode-menu notion-wm-mode-map
-"'notion-wm-mode' menu"
+(easy-menu-define gnome-shell-mode-menu gnome-shell-mode-map
+"'gnome-shell-mode' menu"
                   '("Notion"
                     ("Interaction"
-                    ["Send Procedure" notion-wm-send-proc t]
-                    ["Send Region" notion-wm-send-region t]
-                    ["Send Buffer" notion-wm-send-buffer t]
-                    ["Send String" notion-wm-send-string t]
-                    ["Send Line" notion-wm-send-line t]
+                    ["Send Procedure" gnome-shell-send-proc t]
+                    ["Send Region" gnome-shell-send-region t]
+                    ["Send Buffer" gnome-shell-send-buffer t]
+                    ["Send String" gnome-shell-send-string t]
+                    ["Send Line" gnome-shell-send-line t]
                     )
-                    ["Goto client" notion-wm-goto-client t]
+                    ["Goto client" gnome-shell-goto-client t]
                     ))
 
-(define-derived-mode notion-wm-mode lua-mode "notion"
-  "notion-wm-mode provides a tight integration of emacs and notion.
+(define-derived-mode gnome-shell-mode lua-mode "notion"
+  "gnome-shell-mode provides a tight integration of emacs and notion.
 "
-  (use-local-map notion-wm-mode-map))
+  (use-local-map gnome-shell-mode-map))
 
 ;; --------------------------------------------------------------------------------
 ;; various stuff for testing purposes
 ;; --------------------------------------------------------------------------------
 
 
-;; (notion-wm-send-string "ioncore.goto_next_screen()")
-;; (notion-wm-cmd "ioncore.goto_next_screen()")
+;; (gnome-shell-send-string "ioncore.goto_next_screen()")
+;; (gnome-shell-cmd "ioncore.goto_next_screen()")
 
-;;(defun notion-wm-show-message-for-cmd (cmd)
+;;(defun gnome-shell-show-message-for-cmd (cmd)
 ;;  (interactive "snotion command: ")
-;;  (notion-wm-run-notionflux (concat "mod_query.message(ioncore.find_screen_id(0)," cmd ")")))
+;;  (gnome-shell-run-notionflux (concat "mod_query.message(ioncore.find_screen_id(0)," cmd ")")))
 
 
-;; (notion-wm-client-list)
+;; (gnome-shell-client-list)
 
 
-;; (notion-wm-show-message-for-cmd "ioncore.version()")
-;; (notion-wm-send-string "return ioncore.version()")
-;; (notion-wm-send-string "return 4+5")
+;; (gnome-shell-show-message-for-cmd "ioncore.version()")
+;; (gnome-shell-send-string "return ioncore.version()")
+;; (gnome-shell-send-string "return 4+5")
 
-;; (notion-wm-cmd "ioncore.version()")
-;; (notion-wm-cmd "4+5")
+;; (gnome-shell-cmd "ioncore.version()")
+;; (gnome-shell-cmd "4+5")
 
  ;; (setenv "NOTIONFLUX_SOCKET" "/tmp/fileM5J57y")
 
@@ -334,7 +334,7 @@ The command is prefixed by a return statement."
 
 ;; bool WRegion.goto(WRegion reg)
 
-(provide 'notion-wm-mode)
+(provide 'gnome-shell-mode)
 
 ;;; notion.el ends here
 

@@ -1,4 +1,4 @@
-;;; packages.el --- notion-wm layer packages file for Spacemacs.
+;;; packages.el --- gnome-shell layer packages file for Spacemacs.
 ;;
 ;; Copyright (c) 2012-2016 Sylvain Benner & Contributors
 ;;
@@ -18,23 +18,23 @@
 ;;
 ;;
 ;; Briefly, each package to be installed or configured by this layer should be
-;; added to `notion-wm-packages'. Then, for each package PACKAGE:
+;; added to `gnome-shell-packages'. Then, for each package PACKAGE:
 ;;
 ;; - If PACKAGE is not referenced by any other Spacemacs layer, define a
-;;   function `notion-wm/init-PACKAGE' to load and initialize the package.
+;;   function `gnome-shell/init-PACKAGE' to load and initialize the package.
 
 ;; - Otherwise, PACKAGE is already referenced by another Spacemacs layer, so
-;;   define the functions `notion-wm/pre-init-PACKAGE' and/or
-;;   `notion-wm/post-init-PACKAGE' to customize the package as it is loaded.
+;;   define the functions `gnome-shell/pre-init-PACKAGE' and/or
+;;   `gnome-shell/post-init-PACKAGE' to customize the package as it is loaded.
 
 ;;; Code:
 
-(defconst notion-wm-packages
+(defconst gnome-shell-packages
   '(company
     lua-mode
-    (lua-eldoc-mode :location local)
-    (notion-wm-mode :location local)
-    (company-notion-wm :location local)
+    (gnome-shell-eldoc-mode :location local)
+    (gnome-shell-mode :location local)
+    (company-gnome-shell :location local)
     flycheck)
   "The list of Lisp packages required by the notion layer.
 
@@ -63,45 +63,45 @@ Each entry is either:
       - A list beginning with the symbol `recipe' is a melpa
         recipe.  See: https://github.com/milkypostman/melpa#recipe-format")
 
-(defun notion-wm/init-notion-wm-mode ()
-  (use-package notion-wm-mode
-    :commands (notion-wm-mode)
+(defun gnome-shell/init-gnome-shell-mode ()
+  (use-package gnome-shell-mode
+    :commands (gnome-shell-mode)
     :init
     (progn
-      (add-hook 'notion-wm-mode-hook #'lua-eldoc-mode))
+      (add-hook 'gnome-shell-mode-hook #'gnome-shell-eldoc-mode))
     :config
     (progn
-      ;; (spacemacs/set-leader-keys-for-major-mode 'notion-wm-mode "db" 'notion-wm-send-buffer)
-      (spacemacs/set-leader-keys-for-major-mode 'notion-wm-mode
-        "sb" 'notion-wm-send-buffer
-        "sf" 'notion-wm-send-proc
-        "sl" 'notion-wm-send-current-line
-        "sr" 'notion-wm-send-region
-        "hh" 'notion-wm-look-up-notion-function-at-point)
-      (spacemacs/declare-prefix-for-mode 'notion-wm-mode "mh" "documentation")
-      (spacemacs/declare-prefix-for-mode 'notion-wm-mode "ms" "send to Notion"))
+      ;; (spacemacs/set-leader-keys-for-major-mode 'gnome-shell-mode "db" 'gnome-shell-send-buffer)
+      (spacemacs/set-leader-keys-for-major-mode 'gnome-shell-mode
+        "sb" 'gnome-shell-send-buffer
+        "sf" 'gnome-shell-send-proc
+        "sl" 'gnome-shell-send-current-line
+        "sr" 'gnome-shell-send-region
+        "hh" 'gnome-shell-look-up-notion-function-at-point)
+      (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mh" "documentation")
+      (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "ms" "send to Notion"))
     )
   )
 
-(defun notion-wm/init-company-notion-wm ()
-  (use-package company-notion-wm
+(defun gnome-shell/init-company-gnome-shell ()
+  (use-package company-gnome-shell
     :if (configuration-layer/package-usedp 'company)
-    :commands (company-notion-wm)
+    :commands (company-gnome-shell)
     :init
     (progn
       ;; (require 'company)
-      (spacemacs|add-company-backends :backends company-notion-wm :modes notion-wm-mode)
+      (spacemacs|add-company-backends :backends company-gnome-shell :modes gnome-shell-mode)
 
       )))
 
-(defun notion-wm/init-lua-eldoc-mode ()
-  (use-package lua-eldoc-mode))
+(defun gnome-shell/init-gnome-shell-eldoc-mode ()
+  (use-package gnome-shell-eldoc-mode))
 
-(defun notion-wm/post-init-flycheck ()
-  (spacemacs/add-flycheck-hook 'notion-wm-mode))
+(defun gnome-shell/post-init-flycheck ()
+  (spacemacs/add-flycheck-hook 'gnome-shell-mode))
 
-(defun notion-wm/post-init-notion-wm-mode ()
-  ;; (spacemacs|add-company-hook notion-wm-mode)
+(defun gnome-shell/post-init-gnome-shell-mode ()
+  ;; (spacemacs|add-company-hook gnome-shell-mode)
   )
 
 ;;; packages.el ends here
