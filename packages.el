@@ -77,7 +77,7 @@ Each entry is either:
         "sf" 'gnome-shell-send-proc
         "sl" 'gnome-shell-send-current-line
         "sr" 'gnome-shell-send-region
-        "hh" 'gnome-shell-look-up-notion-function-at-point)
+        "hh" 'gnome-shell-look-up-function-at-point)
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mh" "documentation")
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "ms" "send to Notion"))
     )

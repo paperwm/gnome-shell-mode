@@ -223,7 +223,7 @@ The command is prefixed by a return statement."
   (interactive (list (ido-completing-read "select: " (gnome-shell-client-list))))
   (gnome-shell-send-string (concat "WRegion.goto(ioncore.lookup_clientwin(\"" name "\"))")))
 
-(defun gnome-shell-look-up-notion-function-at-point ()
+(defun gnome-shell-look-up-function-at-point ()
   (interactive)
   ;; Documentation still uses ioncore instead of notioncore
   (let* ((funcname (replace-regexp-in-string "^notioncore\\." "ioncore."
