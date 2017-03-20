@@ -19,11 +19,7 @@ let commandHeader = 'const Clutter = imports.gi.Clutter; ' +
                     'const Tweener = imports.ui.tweener; ' +
                     /* Utility functions...we should probably be able to use these
                      * in the shell core code too. */
-                    'const stage = global.stage; ' +
-                    /* Special lookingGlass functions */
-                    'const inspect = Lang.bind(Main.lookingGlass, Main.lookingGlass.inspect); ' +
-                    'const it = Main.lookingGlass.getIt(); ' +
-                    'const r = Lang.bind(Main.lookingGlass, Main.lookingGlass.getResult); ';
+                    'const stage = global.stage; ';
 
 let _getAutoCompleteGlobalKeywords = () => {
     const keywords = ['true', 'false', 'null', 'new'];
