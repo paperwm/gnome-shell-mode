@@ -71,9 +71,6 @@
 
   (let ((result (gnome-shell-run cmd)))
 
-    ;; notionflux return strings with line continuation
-    (setq result (replace-regexp-in-string "\\\\$" "" result))
-
     (when insert-result
       (save-excursion
         (end-of-line)
@@ -82,14 +79,13 @@
             (newline)
           (forward-line))
 
-        (while (looking-at "--: ")
+        (while (looking-at "//: ")
           (kill-whole-line))
 
         (newline)
         (forward-line -1)
 
-        (insert (replace-regexp-in-string "^" "--: " result))
-        (kill-whole-line)
+        (insert (replace-regexp-in-string "^" "//: " result))
         ))
 
     (when show-result
