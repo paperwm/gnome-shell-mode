@@ -69,7 +69,7 @@
 (defun gnome-shell-run-notionflux-interactively (cmd insert-result show-result)
   "Helper that handles common options relevant for interactive commands"
 
-  (let ((result (gnome-shell-run-notionflux cmd)))
+  (let ((result (gnome-shell-run cmd)))
 
     ;; notionflux return strings with line continuation
     (setq result (replace-regexp-in-string "\\\\$" "" result))
@@ -97,7 +97,7 @@
 
     result))
 
-(defun gnome-shell-run-notionflux (cmd)
+(defun gnome-shell-run (cmd)
   (let* ((wrapped (format "return emacs.eval(%s)" (lua-make-lua-string cmd)))
          (exit-code nil)
          (result nil))
@@ -126,7 +126,7 @@
 
 (defun gnome-shell-send-string (str)
   "Send STR to notion, using the notionflux program."
-  (gnome-shell-run-notionflux str))
+  (gnome-shell-run str))
 
 (defun gnome-shell-send-region (start end &optional insert-result)
   "Send send the region to notion, using the notionflux program."
@@ -312,7 +312,7 @@ The command is prefixed by a return statement."
 
 ;;(defun gnome-shell-show-message-for-cmd (cmd)
 ;;  (interactive "snotion command: ")
-;;  (gnome-shell-run-notionflux (concat "mod_query.message(ioncore.find_screen_id(0)," cmd ")")))
+;;  (gnome-shell-run (concat "mod_query.message(ioncore.find_screen_id(0)," cmd ")")))
 
 
 ;; (gnome-shell-client-list)
