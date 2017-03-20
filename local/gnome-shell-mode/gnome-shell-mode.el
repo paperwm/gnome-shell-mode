@@ -96,10 +96,11 @@
 (defun gnome-shell-run (cmd)
   (let* ((response (dbus-call-method :session "org.gnome.Shell" "/org/gnome/Shell"
                                    "org.gnome.Shell" "Eval" cmd))
+         (success (car response))
          (result (cadr response)))
-    (message result)
-
-    result))
+    (if (string-empty-p result)
+        (pp-to-string success)
+      result)))
 
 (defun gnome-shell-send-string (str)
   "Send STR to notion, using the notionflux program."
