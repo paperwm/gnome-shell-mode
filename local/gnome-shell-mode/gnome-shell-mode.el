@@ -66,7 +66,7 @@
     (modify-syntax-entry ?: "_")
     (current-word t)))
 
-(defun gnome-shell-run-notionflux-interactively (cmd insert-result show-result)
+(defun gnome-shell-run-interactively (cmd insert-result show-result)
   "Helper that handles common options relevant for interactive commands"
 
   (let ((result (gnome-shell-run cmd)))
@@ -131,13 +131,13 @@
 (defun gnome-shell-send-region (start end &optional insert-result)
   "Send send the region to notion, using the notionflux program."
   (interactive "r\nP")
-  (gnome-shell-run-notionflux-interactively (buffer-substring start end)
+  (gnome-shell-run-interactively (buffer-substring start end)
                                           insert-result (called-interactively-p)))
 
 (defun gnome-shell-send-current-line (&optional insert-result)
   "Send send the actual line to notion, using the notionflux program."
   (interactive "P")
-  (gnome-shell-run-notionflux-interactively (buffer-substring (line-beginning-position) (line-end-position))
+  (gnome-shell-run-interactively (buffer-substring (line-beginning-position) (line-end-position))
                                           insert-result (called-interactively-p)))
 
 (defun gnome-shell-repl ()
@@ -177,7 +177,7 @@
           (when assigned-variable
             (setq cmd (concat cmd " return " assigned-variable)))
 
-          (gnome-shell-run-notionflux-interactively cmd t nil)))
+          (gnome-shell-run-interactively cmd t nil)))
       )))
 
 (defun gnome-shell-send-proc ()
@@ -201,7 +201,7 @@
   "Send a command to notion.
 The command is prefixed by a return statement."
   (interactive "sNotion cmd: \nP")
-  (gnome-shell-run-notionflux-interactively cmd insert-result (called-interactively-p)))
+  (gnome-shell-run-interactively cmd insert-result (called-interactively-p)))
 
 
 ;; --------------------------------------------------------------------------------
