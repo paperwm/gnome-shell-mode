@@ -50,9 +50,9 @@
 (defvar gnome-shell-display-target ":0"
   "The DISPLAY to target. Useful when debugging a separate notion in eg. a Xephyr server")
 
-(defconst gnome-shell--lua-helper-path
+(defconst gnome-shell--helper-path
   (concat (file-name-directory (or load-file-name buffer-file-name))
-          "emacs.lua"))
+          "emacs.js"))
 
 (defconst gnome-shell-documentation-url
   "http://notion.sourceforge.net/notionconf/")
@@ -94,13 +94,23 @@
     result))
 
 (defun gnome-shell-run (cmd)
-  (let* ((response (dbus-call-method :session "org.gnome.Shell" "/org/gnome/Shell"
-                                   "org.gnome.Shell" "Eval" cmd))
+  (when (equal "false" (cadr (gnome-shell--run "!!emacs")))
+    ;; send init code
+    (with-temp-buffer
+      (insert-file-contents gnome-shell--helper-path)
+      (gnome-shell--run (buffer-string))))
+
+  (let* ((response (gnome-shell--run cmd))
          (success (car response))
          (result (cadr response)))
+
     (if (string-empty-p result)
         (pp-to-string success)
       result)))
+
+(defun gnome-shell--run (cmd)
+  (dbus-call-method :session "org.gnome.Shell" "/org/gnome/Shell"
+                    "org.gnome.Shell" "Eval" cmd))
 
 (defun gnome-shell-send-string (str)
   "Send STR to notion, using the notionflux program."
