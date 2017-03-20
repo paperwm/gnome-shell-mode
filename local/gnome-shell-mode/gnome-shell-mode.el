@@ -94,7 +94,7 @@
     result))
 
 (defun gnome-shell-run (cmd)
-  (when (equal "false" (cadr (gnome-shell--run "!!emacs")))
+  (unless (car (gnome-shell--run "emacs"))
     ;; send init code
     (with-temp-buffer
       (insert-file-contents gnome-shell--helper-path)
