@@ -209,9 +209,6 @@ The command is prefixed by a return statement."
     (browse-url url))
   )
 
-(defun gnome-shell-eldoc (function-name)
-  (read (gnome-shell-send-string (format "return emacs.eldoc(\"%s\")" function-name))))
-
 (defun gnome-shell--resolve-lua-source-file (relative-path)
   ;; Byte compiled lua files contain file _name_ at best
   (let* ((candidates

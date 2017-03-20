@@ -33,7 +33,6 @@
   '(company
     js2-mode
     dbus
-    (gnome-shell-eldoc-mode :location local)
     (gnome-shell-mode :location local)
     (company-gnome-shell :location local)
     flycheck)
@@ -71,9 +70,6 @@ Each entry is either:
 (defun gnome-shell/init-gnome-shell-mode ()
   (use-package gnome-shell-mode
     :commands (gnome-shell-mode)
-    :init
-    (progn
-      (add-hook 'gnome-shell-mode-hook #'gnome-shell-eldoc-mode))
     :config
     (progn
       ;; (spacemacs/set-leader-keys-for-major-mode 'gnome-shell-mode "db" 'gnome-shell-send-buffer)
@@ -98,9 +94,6 @@ Each entry is either:
       (spacemacs|add-company-backends :backends company-gnome-shell :modes gnome-shell-mode)
 
       )))
-
-(defun gnome-shell/init-gnome-shell-eldoc-mode ()
-  (use-package gnome-shell-eldoc-mode))
 
 (defun gnome-shell/post-init-flycheck ()
   (spacemacs/add-flycheck-hook 'gnome-shell-mode))
