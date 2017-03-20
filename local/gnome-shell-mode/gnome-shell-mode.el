@@ -98,31 +98,30 @@
     result))
 
 (defun gnome-shell-run (cmd)
-  (let* ((wrapped (format "return emacs.eval(%s)" (lua-make-lua-string cmd)))
-         (exit-code nil)
-         (result nil))
-    (with-temp-buffer
-      ;; notionflux have a relative low limit on data accepted as arguments so
-      ;; we need to pass the code through stdin.
+  (let* ((result (dbus-call-method :session "org.gnome.Shell" "/org/gnome/Shell"
+                                   "org.gnome.Shell" "Eval" cmd)))
+    ;; (with-temp-buffer
+    ;;   ;; notionflux have a relative low limit on data accepted as arguments so
+    ;;   ;; we need to pass the code through stdin.
 
-      ;; Emacs seems to use buffers instead of stream objects communication
-      ;; with external processes.
+    ;;   ;; Emacs seems to use buffers instead of stream objects communication
+    ;;   ;; with external processes.
 
-      (insert (format "if emacs == undefined then loadfile('%s')() end\n"
-                      gnome-shell--lua-helper-path))
-      (insert wrapped)
+    ;;   (insert (format "if emacs == undefined then loadfile('%s')() end\n"
+    ;;                   gnome-shell--lua-helper-path))
+    ;;   (insert wrapped)
 
-      ;; Call notion flux with the temp buffer content, replacing it with the
-      ;; output. (both stdout and stderr)
-      (setq exit-code
-            (let ((process-environment process-environment))
-              (setenv "DISPLAY" gnome-shell-display-target)
-              (call-process-region (point-min) (point-max) "notionflux" t t)))
-      (setq result (buffer-string))
-      (when (< 0 exit-code)
-        (error "notionflux failed (%s): %s" exit-code result))
-      result)
-    ))
+    ;;   ;; Call notion flux with the temp buffer content, replacing it with the
+    ;;   ;; output. (both stdout and stderr)
+    ;;   (setq exit-code
+    ;;         (let ((process-environment process-environment))
+    ;;           (setenv "DISPLAY" gnome-shell-display-target)
+    ;;           (call-process-region (point-min) (point-max) "notionflux" t t)))
+    ;;   (setq result (buffer-string))
+    ;;   (when (< 0 exit-code)
+    ;;     (error "notionflux failed (%s): %s" exit-code result))
+    ;;   result)
+    result))
 
 (defun gnome-shell-send-string (str)
   "Send STR to notion, using the notionflux program."
