@@ -150,22 +150,8 @@
           (forward-line -1))
 
         (beginning-of-line)
-
-        ;; IMPROVEMENT: might want to do this for the normal "send-" functions too?
-
-        ;; Is the last statement an simple assignment?
-        ;; If so - add a "return variable" to actually see the result
-        ;; NB: This is a "minimal effort" thing. Probably lots of edge-cases with
-        ;; strange behavior. eg. "foo={bar=2} return foo.bar"
         
-        (let* ((found-match? (search-forward-regexp
-                              "^\\s-*\\(?:local\\s-+\\)?\\([.:_a-z]+\\)\\s-*="
-                              b t))
-               (assigned-variable (and found-match? (match-string 1))))
-          (when assigned-variable
-            (setq cmd (concat cmd " return " assigned-variable)))
-
-          (gnome-shell-run-interactively cmd t nil)))
+        (gnome-shell-run-interactively cmd t nil))
       )))
 
 (defun gnome-shell-send-proc ()
