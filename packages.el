@@ -32,6 +32,7 @@
 (defconst gnome-shell-packages
   '(company
     js2-mode
+    dbus
     (gnome-shell-eldoc-mode :location local)
     (gnome-shell-mode :location local)
     (company-gnome-shell :location local)
@@ -62,6 +63,10 @@ Each entry is either:
 
       - A list beginning with the symbol `recipe' is a melpa
         recipe.  See: https://github.com/milkypostman/melpa#recipe-format")
+
+(defun gnome-shell/init-dbus ()
+  (use-package dbus
+    :commands (dbus-call-method)))
 
 (defun gnome-shell/init-gnome-shell-mode ()
   (use-package gnome-shell-mode
