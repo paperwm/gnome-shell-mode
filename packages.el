@@ -31,7 +31,7 @@
 
 (defconst gnome-shell-packages
   '(company
-    lua-mode
+    js2-mode
     (gnome-shell-eldoc-mode :location local)
     (gnome-shell-mode :location local)
     (company-gnome-shell :location local)

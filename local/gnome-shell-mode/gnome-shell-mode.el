@@ -297,7 +297,7 @@ The command is prefixed by a return statement."
                     ["Goto client" gnome-shell-goto-client t]
                     ))
 
-(define-derived-mode gnome-shell-mode lua-mode "notion"
+(define-derived-mode gnome-shell-mode js2-mode "notion"
   "gnome-shell-mode provides a tight integration of emacs and notion.
 "
   (use-local-map gnome-shell-mode-map))
