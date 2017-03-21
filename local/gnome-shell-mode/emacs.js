@@ -4,6 +4,18 @@ emacs = {};
 
 emacs.verbose = true;
 
+// return sane dbus values
+imports.ui.shellDBus.GnomeShell.prototype.Eval = (code) => {
+    let result;
+    let success = true;
+    try {
+        result = eval(code);
+    } catch(e) {
+        success = false
+    }
+    return [success, result.toString()];
+};
+
 const JsParse = imports.misc.jsParse;
 
 let commandHeader = 'const Clutter = imports.gi.Clutter; ' +
