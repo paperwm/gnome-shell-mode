@@ -7,12 +7,8 @@
           (let* ((context (gnome-shell--name-at-point))
                  (raw-result (gnome-shell-cmd
                               (format "emacs.completion_candidates(\"%s\")" context)))
-                 (result nil))
+                 (result (split-string raw-result ",")))
 
-            (with-temp-buffer
-              (insert raw-result)
-              (beginning-of-buffer)
-              (setq result (coerce (json-read) 'list)))
             (funcall cb result)))))
 
 (defun company-gnome-shell--prefix ()
