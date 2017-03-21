@@ -11,9 +11,10 @@ imports.ui.shellDBus.GnomeShell.prototype.Eval = (code) => {
     try {
         result = eval(code);
     } catch(e) {
-        success = false
+        result = '' + e;
+        success = false;
     }
-    return [success, result.toString()];
+    return [success, result === undefined ? "" : result.toString()];
 };
 
 const JsParse = imports.misc.jsParse;
