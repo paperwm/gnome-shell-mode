@@ -4,6 +4,10 @@ emacs = {};
 
 emacs.verbose = true;
 
+GObject = imports.gi.GObject;
+emacs.find_property = GObject.Object.find_property;
+emacs.list_properties = GObject.Object.list_properties;
+
 // return sane dbus values
 imports.ui.shellDBus.GnomeShell.prototype.Eval = (code) => {
     let result;
@@ -44,8 +48,26 @@ let _getAutoCompleteGlobalKeywords = () => {
 }
 
 emacs.completion_candidates = (text) => {
-    const AUTO_COMPLETE_GLOBAL_KEYWORDS = _getAutoCompleteGlobalKeywords();
+    let AUTO_COMPLETE_GLOBAL_KEYWORDS = _getAutoCompleteGlobalKeywords();
     let [completions, attrHead] = JsParse.getCompletions(text, commandHeader, AUTO_COMPLETE_GLOBAL_KEYWORDS);
-    return completions;
+
+    let path = text.substring(0, text.length - attrHead.length - 1);
+    try {
+        let obj = eval(path);
+        if (obj) {
+            global.log(obj.toString())
+            // global.log("property: "+emacs.find_property.call(obj).toString())
+            emacs.list_properties.call(obj)
+            // list_properties gives names with "-" not "_"
+                .forEach((x) => { completions.push(x.name.replace("-", "_")) });
+
+            if (obj.prototype) {
+                let [pCompletions, _] = JsParse.getCompletions(text + ".prototype", commandHeader, AUTO_COMPLETE_GLOBAL_KEYWORDS)
+                pCompletions.forEach((x) => { completions.push(x)});
+            }
+        }
+    } catch(e) {};
+
+    return completions.filter((x) => {return x.startsWith(attrHead); });
 };
 
