@@ -9,11 +9,11 @@
                               (format "emacs.completion_candidates(\"%s\")" context)))
                  (success (car raw-result))
                  (result (cadr raw-result))
-                 (result (and success
+                 (candidates (and success
                               (not (string-empty-p result))
                               (split-string result ","))))
 
-            (funcall cb result)))))
+            (funcall cb candidates)))))
 
 (defun company-gnome-shell--prefix ()
   (unless (company-in-string-or-comment)
