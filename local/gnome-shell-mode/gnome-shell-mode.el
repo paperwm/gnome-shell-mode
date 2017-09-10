@@ -59,9 +59,7 @@
 
 (defun gnome-shell-run-interactively (cmd insert-result show-result)
   "Helper that handles common options relevant for interactive commands"
-
-  (let ((result (gnome-shell-run cmd)))
-
+  (destructuring-bind (successp result) (gnome-shell-run cmd)
     (when insert-result
       (save-excursion
         (end-of-line)
@@ -70,13 +68,17 @@
             (newline)
           (forward-line))
 
-        (while (looking-at "//: ")
+        (while (looking-at "//[:!] ")
           (kill-whole-line))
 
         (newline)
         (forward-line -1)
 
-        (insert (replace-regexp-in-string "^" "//: " result))
+        (let ((marker (if successp "//: " "//! ")))
+          (insert (if (string-equal "" result)
+                      ;; replace-regexp-in-string is buggy for empty strings
+                      marker
+                    (replace-regexp-in-string "^" marker result))))
         ))
 
     (when show-result
@@ -85,19 +87,15 @@
     result))
 
 (defun gnome-shell-run (cmd)
+  "Return a two-element list where `car' is a flag indicating success/failure,
+and `cadr' is the stringified result/error message"
   (unless (car (gnome-shell--run "emacs"))
     ;; send init code
     (with-temp-buffer
       (insert-file-contents gnome-shell--helper-path)
       (gnome-shell--run (buffer-string))))
 
-  (let* ((response (gnome-shell--run cmd))
-         (success (car response))
-         (result (cadr response)))
-
-    (if (string-empty-p result)
-        (pp-to-string success)
-      result)))
+  (gnome-shell--run cmd))
 
 (defun gnome-shell--run (cmd)
   (dbus-call-method :session "org.gnome.Shell" "/org/gnome/Shell"
@@ -110,14 +108,14 @@
 (defun gnome-shell-send-region (start end &optional insert-result)
   "Send send the region to gnome-shell, using the dbus Eval method."
   (interactive "r\nP")
-  (gnome-shell-run-interactively (buffer-substring start end)
-                                          insert-result (called-interactively-p)))
+  (pp-to-string (gnome-shell-run-interactively (buffer-substring start end)
+                                               insert-result (called-interactively-p))))
 
 (defun gnome-shell-send-current-line (&optional insert-result)
   "Send send the actual line to gnome-shell, using the dbus Eval method."
   (interactive "P")
   (gnome-shell-run-interactively (buffer-substring (line-beginning-position) (line-end-position))
-                                          insert-result (called-interactively-p)))
+                                 insert-result (called-interactively-p)))
 
 (defun gnome-shell-repl ()
   (interactive)

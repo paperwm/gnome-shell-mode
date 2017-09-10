@@ -5,9 +5,13 @@
   (cons :async
         (lambda (cb)
           (let* ((context (gnome-shell--name-at-point))
-                 (raw-result (gnome-shell-cmd
+                 (raw-result (gnome-shell-run
                               (format "emacs.completion_candidates(\"%s\")" context)))
-                 (result (split-string raw-result ",")))
+                 (success (car raw-result))
+                 (result (cadr raw-result))
+                 (result (and success
+                              (not (string-empty-p result))
+                              (split-string result ","))))
 
             (funcall cb result)))))
 
