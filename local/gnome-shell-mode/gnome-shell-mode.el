@@ -1,16 +1,19 @@
-;;; notion.el --- Tight integration of emacs with the notion window manager
+;;; gnome-shell-mode.el --- Tight integration of emacs with gnome-shell
 
-;; Copyright (C) 2005-2006 by Stefan Reichör
+;; Based on notion-wm-mode which again is loosely based on notion.el by Stefan
+;; Reichör
 
-;; Filename: notion.el
-;; Author: Stefan Reichör, <stefan@xsteve.at>
+;; Filename: gnome-shell-mode.el
+;; Authors:
+;; - Tor Hedin Brønner <torhedinbronner@gmail.com>
+;; - Ole Jørgen Brønner <olejorgenb@yahoo.no>
 
-;; notion.el is free software; you can redistribute it and/or modify
+;; gnome-shell-mode.el is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
-;; notion.el is distributed in the hope that it will be useful,
+;; gnome-shell-mode.el is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
@@ -22,40 +25,28 @@
 
 ;;; Commentary
 
-;; notion.el is an emacs interface for the notion window manager
-
-;; You need mod_notionflux-3 (at least from 2005-04-21)
-;; mod_notionflux-3 can be found here: http://modeemi.fi/~tuomov/repos/
+;; gnome-shell-mode.el is an emacs interface to gnome-shell
 
 ;; Put the following in your .emacs to make the gnome-shell-mode function available:
-;; (autoload 'gnome-shell-mode "notion" "Major mode to edit notion config files" t)
+;; (autoload 'gnome-shell-mode "gnome-shell" "Major mode to edit gnome-shell javascript files" t)
 
-;; The latest version of notion.el can be found at http://www.xsteve.at/prg/emacs/notion.el
+;; The latest version of gnome-shell-mode.el can be found at
+;; https://github.com/hedning/gnome-shell-mode
 
 ;; Comments / suggestions welcome!
-
-;;; Todo
-;;  * Better error handling - at the moment they are only shown on the
-;;    terminal, where notion was started
 
 ;;; History:
 ;;
 
 ;;; Code:
 
-;; --------------------------------------------------------------------------------
-;; notion interaction via notionflux
-;; --------------------------------------------------------------------------------
-
-(defvar gnome-shell-display-target ":0"
-  "The DISPLAY to target. Useful when debugging a separate notion in eg. a Xephyr server")
 
 (defconst gnome-shell--helper-path
   (concat (file-name-directory (or load-file-name buffer-file-name))
           "emacs.js"))
 
 (defconst gnome-shell-documentation-url
-  "http://notion.sourceforge.net/notionconf/")
+  "https://people.gnome.org/~gcampagna/docs/")
 
 (defun gnome-shell--name-at-point ()
   "Get current Name { ['.'|':'} Name } sequence."
@@ -113,17 +104,17 @@
                     "org.gnome.Shell" "Eval" cmd))
 
 (defun gnome-shell-send-string (str)
-  "Send STR to notion, using the notionflux program."
+  "Send STR to gnome-shell, using the dbus Eval method."
   (gnome-shell-run str))
 
 (defun gnome-shell-send-region (start end &optional insert-result)
-  "Send send the region to notion, using the notionflux program."
+  "Send send the region to gnome-shell, using the dbus Eval method."
   (interactive "r\nP")
   (gnome-shell-run-interactively (buffer-substring start end)
                                           insert-result (called-interactively-p)))
 
 (defun gnome-shell-send-current-line (&optional insert-result)
-  "Send send the actual line to notion, using the notionflux program."
+  "Send send the actual line to gnome-shell, using the dbus Eval method."
   (interactive "P")
   (gnome-shell-run-interactively (buffer-substring (line-beginning-position) (line-end-position))
                                           insert-result (called-interactively-p)))
@@ -155,7 +146,7 @@
       )))
 
 (defun gnome-shell-send-proc ()
-  "Send proc around point to notion."
+  "Send proc around point to gnome-shell."
   (interactive)
   (let (start end)
     (save-excursion
@@ -166,36 +157,26 @@
     (gnome-shell-send-region start end)))
 
 (defun gnome-shell-send-buffer ()
-  "Send send the buffer content to notion, using the notionflux program."
+  "Send send the buffer content to gnome-shell, using the dbus Eval method."
   (interactive)
   (gnome-shell-send-region (point-min) (point-max)))
 
 
 (defun gnome-shell-cmd (cmd &optional insert-result)
-  "Send a command to notion.
-The command is prefixed by a return statement."
-  (interactive "sNotion cmd: \nP")
+  "Send a expression to gnome-shell."
+  (interactive "sGnome shell cmd: \nP")
   (gnome-shell-run-interactively cmd insert-result (called-interactively-p)))
 
 
-;; --------------------------------------------------------------------------------
-;; Utility functions that need gnome-shell-emacs.lua
-;; --------------------------------------------------------------------------------
-
 (defun gnome-shell-client-list ()
-  "Return the list of the notion clients."
-  (let* ((s (gnome-shell-cmd "emacs.list_clients()"))
-         (s0 (substring s 1 (- (length s) 2)))
-         (client-list (split-string s0 "\\\\\n")))
-    client-list))
+  "Return the list of the managed clients"
+  (throw "not implemented yet"))
 
-
-;; (ido-completing-read "notion window: " (gnome-shell-client-list) t t nil nil (car (gnome-shell-client-list)))
 
 (defun gnome-shell-goto-client (name)
   ;;(interactive (list (ido-completing-read "select: " '("a" "aaab" "a/b" "a/b/c" "x/z"))))
   (interactive (list (ido-completing-read "select: " (gnome-shell-client-list))))
-  (gnome-shell-send-string (concat "WRegion.goto(ioncore.lookup_clientwin(\"" name "\"))")))
+  (throw "not implemented yet"))
 
 (defun gnome-shell-look-up-function-at-point ()
   (interactive)
@@ -209,39 +190,8 @@ The command is prefixed by a return statement."
     (browse-url url))
   )
 
-(defun gnome-shell--resolve-lua-source-file (relative-path)
-  ;; Byte compiled lua files contain file _name_ at best
-  (let* ((candidates
-          (remove-if-not (lambda (project-file-path)
-                           (string-suffix-p relative-path project-file-path))
-                         (projectile-current-project-files)))
-         (project-file (if (rest candidates)
-                           (completing-read "Source file" candidates)
-                         (first candidates))))
-    (if project-file
-        (concat (projectile-project-root) project-file)
-      (helm-find-files-1 relative-path))))
-
-(defun gnome-shell-goto-definition (function-name)
-  (interactive (list (gnome-shell--name-at-point)))
-  ;; Hackety-hack...
-  (let* ((raw (gnome-shell-send-string (format "return emacs.defined_at(\"%s\")" function-name)))
-         (as-string (and raw (read raw)))
-         (location (and as-string (read as-string))))
-
-    (when location
-      (let* ((path          (car location))
-             (line-number   (cadr location))
-             (resolved-path (if (file-name-absolute-p path)
-                                path
-                              (gnome-shell--resolve-lua-source-file path))))
-        (when resolved-path
-          (find-file resolved-path)
-          (goto-line line-number)
-          resolved-path)))))
-
 ;; --------------------------------------------------------------------------------
-;; The notion edit mode, based on lua mode
+;; The gnome-shell edit mode, based on js2-mode
 ;; --------------------------------------------------------------------------------
 
 (defvar gnome-shell-mode-map () "Keymap used in `gnome-shell-mode' buffers.")
@@ -269,45 +219,14 @@ The command is prefixed by a return statement."
                     ))
 
 (define-derived-mode gnome-shell-mode js2-mode "gnome-shell"
-  "gnome-shell-mode provides a tight integration of emacs and gnome-shell.
+  "gnome-shell-mode provides tight integration of emacs and gnome-shell.
 "
   (use-local-map gnome-shell-mode-map))
 
-;; --------------------------------------------------------------------------------
-;; various stuff for testing purposes
-;; --------------------------------------------------------------------------------
-
-
-;; (gnome-shell-send-string "ioncore.goto_next_screen()")
-;; (gnome-shell-cmd "ioncore.goto_next_screen()")
-
-;;(defun gnome-shell-show-message-for-cmd (cmd)
-;;  (interactive "snotion command: ")
-;;  (gnome-shell-run (concat "mod_query.message(ioncore.find_screen_id(0)," cmd ")")))
-
-
-;; (gnome-shell-client-list)
-
-
-;; (gnome-shell-show-message-for-cmd "ioncore.version()")
-;; (gnome-shell-send-string "return ioncore.version()")
-;; (gnome-shell-send-string "return 4+5")
-
-;; (gnome-shell-cmd "ioncore.version()")
-;; (gnome-shell-cmd "4+5")
-
- ;; (setenv "NOTIONFLUX_SOCKET" "/tmp/fileM5J57y")
-
-;; things to support
-;;table ioncore.clientwin_list()
-
-;; WClientWin ioncore.lookup_clientwin(string name)
-
-;; bool WRegion.goto(WRegion reg)
 
 (provide 'gnome-shell-mode)
 
-;;; notion.el ends here
+;;; gnome-shell-mode.el ends here
 
 ;; arch-tag: 17c5fcf9-ea23-4ca5-b7d5-a0635b8b4230
 
