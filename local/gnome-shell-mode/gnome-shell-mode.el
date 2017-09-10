@@ -159,9 +159,9 @@
   (interactive)
   (let (start end)
     (save-excursion
-      (lua-beginning-of-proc)
+      (beginning-of-defun)
       (setq start (point))
-      (lua-end-of-proc)
+      (end-of-defun)
       (setq end (point)))
     (gnome-shell-send-region start end)))
 
