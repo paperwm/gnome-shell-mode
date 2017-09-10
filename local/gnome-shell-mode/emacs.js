@@ -59,7 +59,7 @@ emacs.completion_candidates = (text) => {
             // global.log("property: "+emacs.find_property.call(obj).toString())
             emacs.list_properties.call(obj)
             // list_properties gives names with "-" not "_"
-                .forEach((x) => { completions.push(x.name.replace("-", "_")) });
+                .forEach((x) => { completions.push(x.name.replace(/-/g, "_")) });
 
             if (obj.prototype) {
                 let [pCompletions, _] = JsParse.getCompletions(text + ".prototype", commandHeader, AUTO_COMPLETE_GLOBAL_KEYWORDS)
