@@ -54,9 +54,10 @@ emacs.completion_candidates = (text) => {
     let path = text.substring(0, text.length - attrHead.length - 1);
     try {
         let obj = eval(path);
-        if (obj) {
-            global.log(obj.toString())
-            // global.log("property: "+emacs.find_property.call(obj).toString())
+        if (obj && typeof(obj) === "object") {
+            // NB: emacs.list_properties.call(x) crashes gnome-shell when x is a
+            //     (non-empty) string or number
+
             emacs.list_properties.call(obj)
             // list_properties gives names with "-" not "_"
                 .forEach((x) => { completions.push(x.name.replace(/-/g, "_")) });
