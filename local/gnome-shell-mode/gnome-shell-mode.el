@@ -105,17 +105,17 @@ and `cadr' is the stringified result/error message"
   "Send STR to gnome-shell, using the dbus Eval method."
   (gnome-shell-run str))
 
-(defun gnome-shell-send-region (start end &optional insert-result)
+(defun gnome-shell-send-region (start end &optional insert-result interactively)
   "Send send the region to gnome-shell, using the dbus Eval method."
-  (interactive "r\nP")
-  (pp-to-string (gnome-shell-run-interactively (buffer-substring start end)
-                                               insert-result (called-interactively-p))))
+  (interactive "r\nP\np")
+  (gnome-shell-run-interactively (buffer-substring start end)
+                                 insert-result interactively))
 
-(defun gnome-shell-send-current-line (&optional insert-result)
+(defun gnome-shell-send-current-line (&optional insert-result interactively)
   "Send send the actual line to gnome-shell, using the dbus Eval method."
-  (interactive "P")
+  (interactive "P\np")
   (gnome-shell-run-interactively (buffer-substring (line-beginning-position) (line-end-position))
-                                 insert-result (called-interactively-p)))
+                                 insert-result interactively))
 
 (defun gnome-shell-repl ()
   (interactive)
@@ -143,27 +143,27 @@ and `cadr' is the stringified result/error message"
         (gnome-shell-run-interactively cmd t nil))
       )))
 
-(defun gnome-shell-send-proc ()
+(defun gnome-shell-send-proc (&optional interactively)
   "Send proc around point to gnome-shell."
-  (interactive)
+  (interactive "p")
   (let (start end)
     (save-excursion
       (beginning-of-defun)
       (setq start (point))
       (end-of-defun)
       (setq end (point)))
-    (gnome-shell-send-region start end)))
+    (gnome-shell-send-region start end interactively)))
 
-(defun gnome-shell-send-buffer ()
+(defun gnome-shell-send-buffer (&optional interactively)
   "Send send the buffer content to gnome-shell, using the dbus Eval method."
-  (interactive)
-  (gnome-shell-send-region (point-min) (point-max)))
+  (interactive "p")
+  (gnome-shell-send-region (point-min) (point-max) interactively))
 
 
-(defun gnome-shell-cmd (cmd &optional insert-result)
+(defun gnome-shell-cmd (cmd &optional insert-result interactively)
   "Send a expression to gnome-shell."
-  (interactive "sGnome shell cmd: \nP")
-  (gnome-shell-run-interactively cmd insert-result (called-interactively-p)))
+  (interactive "sGnome shell cmd: \nPp")
+  (gnome-shell-run-interactively cmd insert-result interactively))
 
 
 (defun gnome-shell-client-list ()
