@@ -152,7 +152,7 @@ and `cadr' is the stringified result/error message"
       (setq start (point))
       (end-of-defun)
       (setq end (point)))
-    (gnome-shell-send-region start end interactively)))
+    (gnome-shell-send-region start end nil interactively)))
 
 (defun gnome-shell-send-buffer (&optional interactively)
   "Send send the buffer content to gnome-shell, using the dbus Eval method."
