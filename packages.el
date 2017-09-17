@@ -81,6 +81,9 @@ Each entry is either:
         "hh" 'gnome-shell-look-up-function-at-point)
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mh" "documentation")
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "ms" "send to Shell")
+
+      (evil-define-key 'visual gnome-shell-mode-map (kbd "<return>") 'gnome-shell-send-region)
+      )
     )
   )
 
