@@ -57,9 +57,10 @@
     (modify-syntax-entry ?: "_")
     (current-word t)))
 
-(defun gnome-shell-run-interactively (cmd insert-result show-result)
+(defun gnome-shell-run-interactively (start end insert-result show-result)
   "Helper that handles common options relevant for interactive commands"
-  (destructuring-bind (successp result) (gnome-shell-run cmd)
+  (destructuring-bind (successp result) (gnome-shell-run
+                                         (buffer-substring start end))
     (when insert-result
       (save-excursion
         (end-of-line)
@@ -81,6 +82,11 @@
                     (replace-regexp-in-string "^" marker result))))
         ))
 
+    (when (or show-result insert-result)
+      (pulse-momentary-highlight-region start end
+                                        (if successp
+                                            'diff-refine-added
+                                          'diff-refine-removed)))
     (when show-result
       (message result))
 
@@ -108,13 +114,12 @@ and `cadr' is the stringified result/error message"
 (defun gnome-shell-send-region (start end &optional insert-result interactively)
   "Send send the region to gnome-shell, using the dbus Eval method."
   (interactive "r\nP\np")
-  (gnome-shell-run-interactively (buffer-substring start end)
-                                 insert-result interactively))
+  (gnome-shell-run-interactively start end insert-result interactively))
 
 (defun gnome-shell-send-current-line (&optional insert-result interactively)
   "Send send the actual line to gnome-shell, using the dbus Eval method."
   (interactive "P\np")
-  (gnome-shell-run-interactively (buffer-substring (line-beginning-position) (line-end-position))
+  (gnome-shell-run-interactively (line-beginning-position) (line-end-position)
                                  insert-result interactively))
 
 (defun gnome-shell-repl ()
@@ -126,22 +131,20 @@ and `cadr' is the stringified result/error message"
       (setq a (line-beginning-position)
             b (line-end-position)))
 
-    (let ((cmd (buffer-substring a b)))
-      (save-excursion
-        (goto-char b)
+    (save-excursion
+      (goto-char b)
 
-        (when (eq b (line-beginning-position))
-          ;; What I actually want to check for is if the region is active and is
-          ;; in "line mode". Then b will be at the line _after_ the last code
-          ;; line selected
+      (when (eq b (line-beginning-position))
+        ;; What I actually want to check for is if the region is active and is
+        ;; in "line mode". Then b will be at the line _after_ the last code
+        ;; line selected
 
-          ;; Maybe simply back up all blank lines too?
-          (forward-line -1))
+        ;; Maybe simply back up all blank lines too?
+        (forward-line -1))
 
-        (beginning-of-line)
-        
-        (gnome-shell-run-interactively cmd t nil))
-      )))
+      (beginning-of-line)
+
+      (gnome-shell-run-interactively a b t nil))))
 
 (defun gnome-shell-send-proc (&optional interactively)
   "Send proc around point to gnome-shell."
@@ -163,7 +166,8 @@ and `cadr' is the stringified result/error message"
 (defun gnome-shell-cmd (cmd &optional insert-result interactively)
   "Send a expression to gnome-shell."
   (interactive "sGnome shell cmd: \nPp")
-  (gnome-shell-run-interactively cmd insert-result interactively))
+  ;; FIXME: respect insert-result and interactively arguments
+  (gnome-shell-run cmd))
 
 
 (defun gnome-shell-client-list ()
