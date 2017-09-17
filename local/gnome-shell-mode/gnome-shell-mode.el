@@ -88,7 +88,19 @@
                                             'diff-refine-added
                                           'diff-refine-removed)))
     (when show-result
-      (message result))
+      (let ((presented-result result)
+            presented-face)
+
+        (cond ((and successp (string-empty-p result))
+               (setq presented-face 'success)
+               (setq presented-result "[No return value]"))
+              ((not successp)
+               (setq presented-face 'error)
+               (when (string-empty-p result)
+                 (setq presented-result "[Error without message]"))))
+
+        (message (if presented-face (propertize presented-result 'face presented-face)
+                   presented-result))))
 
     result))
 
