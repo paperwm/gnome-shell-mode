@@ -80,7 +80,7 @@ Each entry is either:
         "sr" 'gnome-shell-send-region
         "hh" 'gnome-shell-look-up-function-at-point)
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mh" "documentation")
-      (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "ms" "send to Notion"))
+      (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "ms" "send to Shell")
     )
   )
 
