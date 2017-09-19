@@ -8,17 +8,60 @@ GObject = imports.gi.GObject;
 emacs.find_property = GObject.Object.find_property;
 emacs.list_properties = GObject.Object.list_properties;
 
-// return sane dbus values
-imports.ui.shellDBus.GnomeShell.prototype.Eval = (code) => {
+// Probably possible to extract from the error stack, but hardcode for now
+// Note: will change if newEval is redefined, restart gnome-shell when making
+// changes to this code for now
+emacs.eval_line_offset = 147;
+
+emacs.originalDBusEval = imports.ui.shellDBus.GnomeShell.prototype.Eval;
+
+imports.ui.shellDBus.GnomeShell.prototype.Eval = function newEval(code) {
+    let eval_result;
     let result;
     let success = true;
     try {
-        result = eval(code);
+        eval_result = eval(code);
+        result = {
+            success: true,
+        };
+
+        let type = typeof(eval_result);
+        if (type === "undefined") {
+            result.undefined = true;
+        } else if (eval_result === null) {
+            result.value = null;
+        } else if (type === "object" && eval_result.__metaclass__) {
+            // GObjects are not serialized properly by JSON.stringify
+            result.value = eval_result.toString();
+        } else if (type === "function") {
+            // Neither are functions
+            result.value = eval_result.toString();
+        } else {
+            // Use JSON.stringify as a poor man's pretty printer
+            result.value = JSON.stringify(eval_result);
+
+            // Also return the actual object. Currently used by the completion
+            // code to avoid parsing a pretty printed array.
+            // When/if we define our own dbus service we can have a separate
+            // dbus method for completion and maybe remove this line.
+            result.raw_value = eval_result;
+        }
     } catch(e) {
-        result = '' + e;
+        // Note: JSON.stringify(e) doesn't reliably include all fields
+        result = {
+            success: false,
+            value: e.message,
+            stack: e.stack,
+            lineNumber: e.lineNumber - emacs.eval_line_offset,
+            columnNumber: e.columnNumber, 
+            // e.constructor
+            file: e.file
+        }
+        emacs.lasterr = e; // for debugging
+
         success = false;
     }
-    return [success, result === undefined ? "" : result.toString()];
+    return [success, JSON.stringify(result)];
 };
 
 const JsParse = imports.misc.jsParse;

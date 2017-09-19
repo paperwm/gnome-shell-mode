@@ -59,8 +59,13 @@
 
 (defun gnome-shell-run-interactively (start end insert-result show-result)
   "Helper that handles common options relevant for interactive commands"
-  (destructuring-bind (successp result) (gnome-shell-run
-                                         (buffer-substring start end))
+  (let* ((result-obj (gnome-shell-eval (buffer-substring start end)))
+         (successp (eq (alist-get 'success result-obj) t)) ;; false -> :json-false..
+         (result   (alist-get 'value result-obj))
+         (is-undefined (alist-get 'undefined result-obj))
+         ;; The result is already reasonable pretty, but we need to represent
+         ;; null values
+         (pp-result (if result result "null")))
     (when insert-result
       (save-excursion
         (end-of-line)
@@ -76,27 +81,49 @@
         (forward-line -1)
 
         (let ((marker (if successp "//: " "//! ")))
-          (insert (if (string-equal "" result)
+          (insert (if (string-equal "" pp-result)
                       ;; replace-regexp-in-string is buggy for empty strings
                       marker
-                    (replace-regexp-in-string "^" marker result))))
+                    (replace-regexp-in-string "^" marker pp-result))))
         ))
 
     (when (or show-result insert-result)
+      ;; This was an interactive action so we give the user appropriate feedback
+
+      ;; pulse.el is part of cedet. An alternative separate package is
+      ;; flash-region (don't seem to animate the flash)
       (pulse-momentary-highlight-region start end
                                         (if successp
                                             'diff-refine-added
-                                          'diff-refine-removed)))
+                                          'diff-refine-removed))
+
+      (flycheck-clear) ;; wtf, no way to clear by error id?!
+      (when (not successp)
+        ;; Ensure that error occured in the evaled code
+        ;; If not, we can check the stacktrace for where the failing code was
+        ;; called
+        (let* ((column (alist-get 'columnNumber result-obj))
+               (line   (alist-get 'lineNumber result-obj))
+               (buf-line   (+ (line-number-at-pos start) line))
+               (buf-column (+ (save-excursion
+                                (goto-char start)
+                                (current-column)) column 1)))
+
+          ;; FIXME: When using gnome-shell-repl the flycheck error is cleared for some reason?
+          (flycheck-add-overlay 
+           (flycheck-error-new-at buf-line buf-column 'error result
+                                  :id 'gnome-shell-repl-error)))))
+
     (when show-result
-      (let ((presented-result result)
+      (let ((presented-result pp-result)
             presented-face)
 
-        (cond ((and successp (string-empty-p result))
+        (cond ((and successp is-undefined)
                (setq presented-face 'success)
                (setq presented-result "[No return value]"))
               ((not successp)
                (setq presented-face 'error)
-               (when (string-empty-p result)
+               (when is-undefined
                  (setq presented-result "[Error without message]"))))
 
         (message (if presented-face (propertize presented-result 'face presented-face)
@@ -104,24 +131,31 @@
 
     result))
 
-(defun gnome-shell-run (cmd)
-  "Return a two-element list where `car' is a flag indicating success/failure,
-and `cadr' is the stringified result/error message"
-  (unless (car (gnome-shell--run "emacs"))
-    ;; send init code
-    (with-temp-buffer
-      (insert-file-contents gnome-shell--helper-path)
-      (gnome-shell--run (buffer-string))))
-
-  (gnome-shell--run cmd))
-
-(defun gnome-shell--run (cmd)
+(defun gnome-shell--dbus-eval (cmd)
+  "Raw dbus eval call. Returns a list: (success/boolean result/string)"
   (dbus-call-method :session "org.gnome.Shell" "/org/gnome/Shell"
                     "org.gnome.Shell" "Eval" cmd))
 
-(defun gnome-shell-send-string (str)
-  "Send STR to gnome-shell, using the dbus Eval method."
-  (gnome-shell-run str))
+(defun gnome-shell-eval (code)
+  "Evaluates `code' in gnome-shell and returns an alist:
+  'success : true if no error occured
+If success:
+  'value : semi-pretty result value
+  'raw_value : The raw value serialized to JSON and decoded to lisp equivalent values
+If error:
+  Most properties from Error. Eg. 'message, 'stack, 'lineNumber, 'columnNumber,
+'file"
+  (unless (car (gnome-shell--dbus-eval "emacs"))
+    ;; send init code
+    (message "sending init code")
+    (with-temp-buffer
+      (insert-file-contents gnome-shell--helper-path)
+      (gnome-shell--dbus-eval (buffer-string))))
+
+  ;; HACK: The init code changes the Eval method
+  (destructuring-bind (successp jsonres)
+      (gnome-shell--dbus-eval code)
+    (json-read-from-string jsonres)))
 
 (defun gnome-shell-send-region (start end &optional insert-result interactively)
   "Send send the region to gnome-shell, using the dbus Eval method."
@@ -179,7 +213,7 @@ and `cadr' is the stringified result/error message"
   "Send a expression to gnome-shell."
   (interactive "sGnome shell cmd: \nPp")
   ;; FIXME: respect insert-result and interactively arguments
-  (gnome-shell-run cmd))
+  (gnome-shell-eval cmd))
 
 
 (defun gnome-shell-client-list ()

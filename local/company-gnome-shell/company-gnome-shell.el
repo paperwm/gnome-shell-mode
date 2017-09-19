@@ -5,13 +5,11 @@
   (cons :async
         (lambda (cb)
           (let* ((context (gnome-shell--name-at-point))
-                 (raw-result (gnome-shell-run
+                 (result-obj (gnome-shell-eval
                               (format "emacs.completion_candidates(\"%s\")" context)))
-                 (success (car raw-result))
-                 (result (cadr raw-result))
-                 (candidates (and success
-                              (not (string-empty-p result))
-                              (split-string result ","))))
+                 (success (alist-get 'success result-obj))
+                 (candidates (coerce (alist-get 'raw_value result-obj)
+                                     'list)))
 
             (funcall cb candidates)))))
 
