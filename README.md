@@ -9,7 +9,7 @@ it's definitely alpha software and might still crash your Gnome Shell session, u
 
 There's no melpa package yet, but it's quite easy to use the layer with Spacemacs.
 
-Clone the repo and create a symlink named ~gnome-shell~ in the spacemacs ~private~ folder:
+Clone the repo and create a symlink named `gnome-shell` in the spacemacs `private` folder:
 ```shell
 git clone https://github.com/paperwm/gnome-shell-mode.git ~/the/destination
 ln -s ~/the/destination /.emacs.d/private/gnome-shell
