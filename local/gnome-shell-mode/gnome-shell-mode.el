@@ -65,7 +65,8 @@
          (is-undefined (alist-get 'undefined result-obj))
          ;; The result is already reasonable pretty, but we need to represent
          ;; null values
-         (pp-result (if result result "null")))
+         (pp-result (if result result
+                      (if is-undefined "undefined" "null"))))
     (when insert-result
       (save-excursion
         (end-of-line)
