@@ -31,7 +31,7 @@ Restart emacs and you're ready to go.
 
 Make sure you're in gnome-shell-mode (eg. by using <kbd>M-x gnome-shell-mode</kbd>). All the actions will then be under the major-mode leader key (<kbd>M-m</kbd> or <kbd>,</kbd>).
 
-For instance <kbd>,sf</kbd> will evaluate the surrounding function and the evaluated region will pulse green or red depending on the success of the evaluation.
+For instance <kbd>,sf</kbd> will evaluate the surrounding function and the evaluated region will pulse green or red depending on the success of the evaluation. If an error occurred, the position reported by gjs will be marked as a flycheck error.
 
 There's two non-standard keybindings:
 - <kbd>Return</kbd> will evaluate the active region (if evil is used)
