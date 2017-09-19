@@ -36,3 +36,9 @@ For instance <kbd>,sf</kbd> will evaluate the surrounding function and the evalu
 There's two non-standard keybindings:
 - <kbd>Return</kbd> will evaluate the active region (if evil is used)
 - <kbd>C-Return</kbd> will evaluate the active region, or the current line if there's no region active. It will then insert the result as a comment on the next line.
+
+## Caveats
+
+Not all methods of GObjects (g-object-introspected classes) complete before they're used the first time. This include alot of classes you'll interact with. eg. `MetaWindow`. We're unsure how to fix this. Suggestions are welcome.
+
+Completion doesn't work for string and function objects.
