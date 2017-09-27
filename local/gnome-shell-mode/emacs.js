@@ -47,8 +47,13 @@ emacs.pp_helper = function pp_helper(key, obj) {
             // of an object. Eg. by surrounding it by single quotes.
             pretty = obj
         } else {
-            // Let JSON handle it
-            pretty = obj;
+            if (obj.toString !== Object.prototype.toString) {
+                // The object have a custom toString method
+                pretty = obj.toString();
+            } else {
+                // Let JSON handle it
+                pretty = obj;
+            }
         }
         return pretty;
     }
@@ -97,7 +102,7 @@ imports.ui.shellDBus.GnomeShell.prototype.Eval = function newEval(code) {
                 result.raw_value = eval_result;
             }
         } catch(e) {
-            throw new Error("Error during pretty printing");
+            throw new Error("Error during pretty printing: " + e.message);
         }
 
     } catch(e) {
