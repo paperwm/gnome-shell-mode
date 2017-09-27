@@ -11,7 +11,8 @@ emacs.list_properties = GObject.Object.list_properties;
 // Probably possible to extract from the error stack, but hardcode for now
 // Note: will change if newEval is redefined, restart gnome-shell when making
 // changes to this code for now
-emacs.eval_line_offset = 207;
+// in gnome-shell 3.24.3 eval lineNumber is correct!
+emacs.eval_line_offset = 0; 
 
 /// Add custom printers here indexed by constructor name
 // (obj, key) => String or primitive to be serialized further to JSON
