@@ -108,7 +108,8 @@
                (buf-line   (+ (line-number-at-pos start) line))
                (buf-column (+ (save-excursion
                                 (goto-char start)
-                                (current-column)) column 1)))
+                                (current-column))
+                              column)))
 
           ;; FIXME: When using gnome-shell-repl the flycheck error is cleared for some reason?
           (flycheck-add-overlay 
