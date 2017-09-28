@@ -105,7 +105,7 @@
         ;; called
         (let* ((column (alist-get 'columnNumber result-obj))
                (line   (alist-get 'lineNumber result-obj))
-               (buf-line   (+ (line-number-at-pos start) line))
+               (buf-line   (+ (line-number-at-pos start) line -1)) ;; 1 vs 0 indexed
                (buf-column (+ (save-excursion
                                 (goto-char start)
                                 (current-column))
