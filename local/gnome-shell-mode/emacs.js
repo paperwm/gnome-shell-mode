@@ -94,12 +94,16 @@ imports.ui.shellDBus.GnomeShell.prototype.Eval = function newEval(code) {
         try {
             result.value = emacs.pp_object(eval_result)
 
-            if(eval_result && eval_result.constructor === Array) {
+            if (eval_result && eval_result.constructor === Array) {
                 // Also return the actual object. Currently used by the
                 // completion code to avoid parsing a pretty printed array.
                 // When/if we define our own dbus service we can have a separate
                 // dbus method for completion and maybe remove this line.
-                result.raw_value = eval_result;
+                if (eval_result.every(x => typeof(x) === "string")) {
+                    // Other types can cause problems. eg. dbus fails if a
+                    // object is cyclic.
+                    result.raw_value = eval_result;
+                }
             }
         } catch(e) {
             throw new Error("Error during pretty printing: " + e.message);
