@@ -19,6 +19,23 @@ emacs.eval_line_offset = 0;
 // `key` is undefined if top-level object
 emacs.pretty_printers = {}
 
+emacs.pp_rect = function(xywh) {
+    let [x,y,w,h] = xywh.map( v => v.toFixed(1) );
+    return `{ x: ${x}, y: ${y}, w: ${w}, h: ${h} }`
+}
+
+emacs.pretty_printers["Clutter_ActorBox"] = function(box, key) {
+    let x = box.get_x()
+    let y = box.get_y()
+    let w = box.get_width()
+    let h = box.get_height()
+    return `ActorBox ${emacs.pp_rect([x,y,w,h])}`
+}
+
+emacs.pretty_printers["Meta_Rectangle"] = function(box, key) {
+    return `Meta_Rectangle ${emacs.pp_rect([box.x, box.y, box.width, box.height])}`
+}
+
 emacs.pp_helper = function pp_helper(key, obj) {
         let type = typeof(obj);
         let pretty;
