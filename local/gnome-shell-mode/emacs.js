@@ -24,6 +24,22 @@ emacs.pp_rect = function(xywh) {
     return `{ x: ${x}, y: ${y}, w: ${w}, h: ${h} }`
 }
 
+emacs.pretty_printers["Object"] = function(obj, key) {
+    if (obj.toString !== Object.prototype.toString) {
+        // The object have a custom toString method
+        return obj.toString();
+    } else {
+        // Let JSON handle it
+        return  obj;
+    }
+}
+
+emacs.pretty_printers["Array"] = function(obj, key) {
+    // Let JSON handle it
+    return obj;
+}
+
+
 emacs.pretty_printers["Clutter_ActorBox"] = function(box, key) {
     let x = box.get_x()
     let y = box.get_y()
@@ -43,11 +59,7 @@ emacs.pp_helper = function pp_helper(key, obj) {
             pretty = "undefined";
         } else if (obj === null) {
             pretty = "null";
-        } else if (type === "object"
-                   && obj.constructor !== Object
-                   && obj.constructor !== Array) {
-            // Note: GObjects are not serialized properly by JSON.stringify
-            //       (and we want custom handling anyway)
+        } else if (type === "object") {
             let constructor_name = obj.constructor.name;
             let custom_pp_fn = emacs.pretty_printers[constructor_name];
             if (custom_pp_fn) {
@@ -64,13 +76,8 @@ emacs.pp_helper = function pp_helper(key, obj) {
             // of an object. Eg. by surrounding it by single quotes.
             pretty = obj
         } else {
-            if (obj.toString !== Object.prototype.toString) {
-                // The object have a custom toString method
-                pretty = obj.toString();
-            } else {
-                // Let JSON handle it
-                pretty = obj;
-            }
+            // Let JSON handle it (Numbers, etc.)
+            pretty = obj;
         }
         return pretty;
     }
