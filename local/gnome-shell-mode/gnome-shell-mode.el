@@ -260,7 +260,7 @@ If error:
     (cond ((= 1 candidate-count)
            (setq selected-candidate (first candidates))
            (message "Opening reference page"))
-          ((>= 50 candidate-count)
+          ((>= candidate-count 50)
            ;; /symbols/lookup return max 50 results
            (message "Too many results, redirect to search page")
            (setq selected-candidate funcname))
