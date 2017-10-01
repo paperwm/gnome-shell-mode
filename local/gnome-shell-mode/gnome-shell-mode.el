@@ -45,8 +45,10 @@
   (concat (file-name-directory (or load-file-name buffer-file-name))
           "emacs.js"))
 
-(defconst gnome-shell-documentation-url
+(defconst gnome-shell-gjs-documentation-url
   "https://people.gnome.org/~gcampagna/docs/")
+(defconst gnome-symbol-query-url
+  "https://developer.gnome.org/symbols/")
 
 (defun gnome-shell--name-at-point ()
   "Get current Name { ['.'|':'} Name } sequence."
@@ -228,17 +230,48 @@ If error:
   (interactive (list (ido-completing-read "select: " (gnome-shell-client-list))))
   (throw "not implemented yet"))
 
+(defun gnome-shell--lookup-symbol-candidates (partial-symbol)
+  ;; Endpoint source: https://git.gnome.org/browse/library-web/tree/web/api.py
+  (let ((query (concat gnome-symbol-query-url "lookup/" partial-symbol "?")))
+    (with-current-buffer (url-retrieve-synchronously query)
+      (progn
+        ;; WTF!!.. I have to parse the response myself?!
+        ;; I don't really have time for that shit, so just assume things went well
+        ;; Note: Seems the async method at least provides a parsed status..
+        (goto-char (point-min))
+        (forward-evil-paragraph)
+        (forward-line)
+        (let ((lines 
+               (split-string (buffer-substring (point) (point-max)) "\n")))
+          (kill-buffer)
+          lines))))
+  )
+
 (defun gnome-shell-look-up-function-at-point ()
   (interactive)
-  ;; Documentation still uses ioncore instead of notioncore
-  (let* ((funcname (replace-regexp-in-string "^notioncore\\." "ioncore."
-                                             (gnome-shell--name-at-point)))
-         (lua-req (format "return emacs.canonical_funcname(\"%s\")" funcname))
-         (canonical-funcname (read (gnome-shell-send-string lua-req))) ;; CLEANUP
-         (url (concat gnome-shell-documentation-url
-                      "node7.html#fn:" canonical-funcname)))
-    (browse-url url))
-  )
+  (let* ((funcname (car (last (split-string (gnome-shell--name-at-point)
+                                            "\\."))))
+         (candidates (gnome-shell--lookup-symbol-candidates funcname))
+         (candidate-count (length candidates))
+         (selected-candidate))
+    ;; (message "candidate-count %s" candidate-count)
+    ;; (message "funcname %s" funcname)
+    ;; (message "candidates %s" candidates)
+    (cond ((= 1 candidate-count)
+           (setq selected-candidate (first candidates))
+           (message "Opening reference page"))
+          ((>= 50 candidate-count)
+           ;; /symbols/lookup return max 50 results
+           (message "Too many results, redirect to search page")
+           (setq selected-candidate funcname))
+          ((= 0 candidate-count)
+           (message "No results"))
+          (t
+           (setq selected-candidate (completing-read "Candidates: " candidates))
+           (when selected-candidate (message "Opening reference page"))))
+    (when selected-candidate
+        (browse-url (concat gnome-symbol-query-url "?q=" selected-candidate))
+      )))
 
 ;; --------------------------------------------------------------------------------
 ;; The gnome-shell edit mode, based on js2-mode
