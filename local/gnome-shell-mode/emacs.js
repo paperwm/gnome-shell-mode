@@ -4,6 +4,7 @@ emacs = {};
 
 emacs.verbose = true;
 
+const Gio = imports.gi.Gio;
 GObject = imports.gi.GObject;
 emacs.find_property = GObject.Object.find_property;
 emacs.list_properties = GObject.Object.list_properties;
@@ -103,53 +104,69 @@ emacs.pp_object = function(obj) {
     }
 }
 
-emacs.originalDBusEval = imports.ui.shellDBus.GnomeShell.prototype.Eval;
+const EvalIface =
+'\
+<node> \
+<interface name="gnome.shell.mode"> \
+<method name="Eval"> \
+    <arg type="s" direction="in" name="script" /> \
+    <arg type="b" direction="out" name="success" /> \
+    <arg type="s" direction="out" name="result" /> \
+</method> \
+</interface> \
+</node> \
+';
 
-imports.ui.shellDBus.GnomeShell.prototype.Eval = function newEval(code) {
-    let eval_result;
-    let result;
-    let success = true;
-    try {
-        eval_result = eval(code);
-        result = {
-            success: true,
-        };
-
+let DbusObject = {
+    Eval: function (code) {
+        let eval_result;
+        let result;
+        let success = true;
         try {
-            result.value = emacs.pp_object(eval_result)
+            eval_result = eval(code);
+            result = {
+                success: true,
+            };
 
-            if (eval_result && eval_result.constructor === Array) {
-                // Also return the actual object. Currently used by the
-                // completion code to avoid parsing a pretty printed array.
-                // When/if we define our own dbus service we can have a separate
-                // dbus method for completion and maybe remove this line.
-                if (eval_result.every(x => typeof(x) === "string")) {
-                    // Other types can cause problems. eg. dbus fails if a
-                    // object is cyclic.
-                    result.raw_value = eval_result;
+            try {
+                result.value = emacs.pp_object(eval_result)
+
+                if (eval_result && eval_result.constructor === Array) {
+                    // Also return the actual object. Currently used by the
+                    // completion code to avoid parsing a pretty printed array.
+                    // When/if we define our own dbus service we can have a separate
+                    // dbus method for completion and maybe remove this line.
+                    if (eval_result.every(x => typeof(x) === "string")) {
+                        // Other types can cause problems. eg. dbus fails if a
+                        // object is cyclic.
+                        result.raw_value = eval_result;
+                    }
                 }
+            } catch(e) {
+                throw new Error("Error during pretty printing: " + e.message);
             }
+
         } catch(e) {
-            throw new Error("Error during pretty printing: " + e.message);
-        }
+            // Note: JSON.stringify(e) doesn't reliably include all fields
+            result = {
+                success: false,
+                value: e.message,
+                stack: e.stack,
+                lineNumber: e.lineNumber - emacs.eval_line_offset,
+                columnNumber: e.columnNumber, 
+                // e.constructor
+                file: e.file
+            }
+            emacs.lasterr = e; // for debugging
 
-    } catch(e) {
-        // Note: JSON.stringify(e) doesn't reliably include all fields
-        result = {
-            success: false,
-            value: e.message,
-            stack: e.stack,
-            lineNumber: e.lineNumber - emacs.eval_line_offset,
-            columnNumber: e.columnNumber, 
-            // e.constructor
-            file: e.file
+            success = false;
         }
-        emacs.lasterr = e; // for debugging
-
-        success = false;
+        return [success, JSON.stringify(result)];
     }
-    return [success, JSON.stringify(result)];
 };
+
+emacs.dbusImpl = Gio.DBusExportedObject.wrapJSObject(EvalIface, DbusObject);
+emacs.dbusImpl.export(Gio.DBus.session, '/gnome/shell/mode');
 
 const JsParse = imports.misc.jsParse;
 

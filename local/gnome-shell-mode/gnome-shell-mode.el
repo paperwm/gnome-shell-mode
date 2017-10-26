@@ -135,10 +135,15 @@
 
     result))
 
-(defun gnome-shell--dbus-eval (cmd)
-  "Raw dbus eval call. Returns a list: (success/boolean result/string)"
+(defun gnome-shell--dbus-bootstrap-eval (cmd)
+  "Function to bootstrap our own Eval"
   (dbus-call-method :session "org.gnome.Shell" "/org/gnome/Shell"
                     "org.gnome.Shell" "Eval" cmd))
+
+(defun gnome-shell--dbus-eval (cmd)
+  "Raw dbus eval call. Returns a list: (success/boolean result/string)"
+  (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
+                    "gnome.shell.mode" "Eval" cmd))
 
 (defun gnome-shell-eval (code)
   "Evaluates `code' in gnome-shell and returns an alist:
@@ -149,12 +154,12 @@ If success:
 If error:
   Most properties from Error. Eg. 'message, 'stack, 'lineNumber, 'columnNumber,
 'file"
-  (unless (car (gnome-shell--dbus-eval "emacs"))
+  (unless (car (gnome-shell--dbus-bootstrap-eval "emacs"))
     ;; send init code
     (message "sending init code")
     (with-temp-buffer
       (insert-file-contents gnome-shell--helper-path)
-      (gnome-shell--dbus-eval (buffer-string))))
+      (gnome-shell--dbus-bootstrap-eval (buffer-string))))
 
   ;; HACK: The init code changes the Eval method
   (destructuring-bind (successp jsonres)
