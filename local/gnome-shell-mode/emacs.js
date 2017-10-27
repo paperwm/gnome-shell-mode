@@ -145,9 +145,7 @@ let DbusObject = {
         let result;
         let success = true;
         try {
-            with (emacs.module) {
-                eval_result =  eval(code);
-            }
+            eval_result =  (0, eval)(`with(emacs.module){ ${code} }`);
             result = {
                 success: true,
             };
