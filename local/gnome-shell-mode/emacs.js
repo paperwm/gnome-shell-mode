@@ -141,7 +141,7 @@ let DbusObject = {
                 // We're in a module and we can replace `var` with
                 // `emacs.module.` so that re-assignment works
                 if (emacs.module !== empty) {
-                    code = code.replace('^var ', 'emacs.module.');
+                    code = code.replace(/^var /g, 'emacs.module.');
                 }
             } catch(e) {
                 print(`Couldn't load module, will evaluate without: ${e.message}`)
