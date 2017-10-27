@@ -128,14 +128,21 @@ let DbusObject = {
             path = path.substring(0, path.length - 3);
             // We try in case the extension module has syntax errors
             try {
+                let empty = {};
                 let Extension =
                     imports.misc.extensionUtils.extensions[extension];
                 emacs.module = path.split('/').reduce((module, name) => {
                     if (module[name]) {
                         return module[name];
                     }
-                    return {};
+                    return empty;
                 }, Extension.imports);
+
+                // We're in a module and we can replace `var` with
+                // `emacs.module.` so that re-assignment works
+                if (emacs.module !== empty) {
+                    code = code.replace('^var ', 'emacs.module.');
+                }
             } catch(e) {
                 print(`Couldn't load module, will evaluate without: ${e.message}`)
             }
