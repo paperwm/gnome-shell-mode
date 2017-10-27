@@ -110,6 +110,8 @@ const EvalIface =
 <interface name="gnome.shell.mode"> \
 <method name="Eval"> \
     <arg type="s" direction="in" name="script" /> \
+    <arg type="s" direction="in" name="extension" /> \
+    <arg type="s" direction="in" name="path" /> \
     <arg type="b" direction="out" name="success" /> \
     <arg type="s" direction="out" name="result" /> \
 </method> \
@@ -118,12 +120,34 @@ const EvalIface =
 ';
 
 let DbusObject = {
-    Eval: function (code) {
+    Eval: function (code, extension, path) {
+
+        emacs.module = {};
+        // Set up module we're in
+        if (path.endsWith('.js')) {
+            path = path.substring(0, path.length - 3);
+            // We try in case the extension module has syntax errors
+            try {
+                let Extension =
+                    imports.misc.extensionUtils.extensions[extension];
+                emacs.module = path.split('/').reduce((module, name) => {
+                    if (module[name]) {
+                        return module[name];
+                    }
+                    return {};
+                }, Extension.imports);
+            } catch(e) {
+                print(`Couldn't load module, will evaluate without: ${e.message}`)
+            }
+        }
+
         let eval_result;
         let result;
         let success = true;
         try {
-            eval_result = eval(code);
+            with (emacs.module) {
+                eval_result =  eval(code);
+            }
             result = {
                 success: true,
             };
@@ -197,6 +221,18 @@ let _getAutoCompleteGlobalKeywords = () => {
 emacs.completion_candidates = (text) => {
     let AUTO_COMPLETE_GLOBAL_KEYWORDS = _getAutoCompleteGlobalKeywords();
     let [completions, attrHead] = JsParse.getCompletions(text, commandHeader, AUTO_COMPLETE_GLOBAL_KEYWORDS);
+
+    let objectPath = text.split('.').slice(0, -1);
+    let moduleObject = objectPath.reduce((object, path) => {
+        if (object[path]) {
+            return object[path];
+        }
+        return {};
+    }, emacs.module);
+
+    for (let varname in moduleObject) {
+        completions.push(varname);
+    }
 
     let path = text.substring(0, text.length - attrHead.length - 1);
     try {

@@ -50,6 +50,11 @@
 (defconst gnome-symbol-query-url
   "https://developer.gnome.org/symbols/")
 
+;; Hardcode the extension path for now
+(defvar gnome-shell-mode-extension
+  "paperwm@hedning:matrix.org"
+  "The path that's used to identify the extension, ie. `~/.share/local/gnome-shell/extensions/path'.")
+
 (defun gnome-shell--name-at-point ()
   "Get current Name { ['.'|':'} Name } sequence."
   ;; Taken from lua-mode.el
@@ -143,7 +148,11 @@
 (defun gnome-shell--dbus-eval (cmd)
   "Raw dbus eval call. Returns a list: (success/boolean result/string)"
   (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
-                    "gnome.shell.mode" "Eval" cmd))
+                    "gnome.shell.mode" "Eval"
+                    cmd gnome-shell-mode-extension (gnome-shell--module-path)))
+
+(defun gnome-shell--module-path ()
+  (file-relative-name (buffer-file-name) (projectile-project-root)))
 
 (defun gnome-shell-eval (code)
   "Evaluates `code' in gnome-shell and returns an alist:
@@ -154,7 +163,7 @@ If success:
 If error:
   Most properties from Error. Eg. 'message, 'stack, 'lineNumber, 'columnNumber,
 'file"
-  (unless (car (gnome-shell--dbus-bootstrap-eval "emacs"))
+  (unless (car (gnome-shell--dbus-bootstrap-eval "emacs === undefined"))
     ;; send init code
     (message "sending init code")
     (with-temp-buffer
