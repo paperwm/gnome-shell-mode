@@ -223,18 +223,25 @@ emacs.completion_candidates = (text) => {
     let [completions, attrHead] = JsParse.getCompletions(text, commandHeader, AUTO_COMPLETE_GLOBAL_KEYWORDS);
 
     let objectPath = text.split('.').slice(0, -1);
+    let empty = {};
     let moduleObject = objectPath.reduce((object, path) => {
         if (object[path]) {
             return object[path];
         }
-        return {};
+        return empty;
     }, emacs.module);
 
     for (let varname in moduleObject) {
         completions.push(varname);
     }
 
-    let path = text.substring(0, text.length - attrHead.length - 1);
+    let path;
+    if (moduleObject === emacs.module || moduleObject === empty) {
+        path = text.substring(0, text.length - attrHead.length - 1);
+    } else {
+        path = moduleObject;
+    }
+
     try {
         let obj = eval(path);
         if (obj && typeof(obj) === "object") {
