@@ -50,11 +50,6 @@
 (defconst gnome-symbol-query-url
   "https://developer.gnome.org/symbols/")
 
-;; Hardcode the extension path for now
-(defvar gnome-shell-mode-extension
-  "paperwm@hedning:matrix.org"
-  "The path that's used to identify the extension, ie. `~/.share/local/gnome-shell/extensions/path'.")
-
 (defun gnome-shell--name-at-point ()
   "Get current Name { ['.'|':'} Name } sequence."
   ;; Taken from lua-mode.el
@@ -149,7 +144,7 @@
   "Raw dbus eval call. Returns a list: (success/boolean result/string)"
   (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
                     "gnome.shell.mode" "Eval"
-                    cmd gnome-shell-mode-extension (gnome-shell--module-path)))
+                    cmd (projectile-project-root) (gnome-shell--module-path)))
 
 (defun gnome-shell--module-path ()
   (file-relative-name (buffer-file-name) (projectile-project-root)))

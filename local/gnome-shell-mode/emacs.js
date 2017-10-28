@@ -5,6 +5,7 @@ emacs = {};
 emacs.verbose = true;
 
 const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 GObject = imports.gi.GObject;
 emacs.find_property = GObject.Object.find_property;
 emacs.list_properties = GObject.Object.list_properties;
@@ -110,7 +111,7 @@ const EvalIface =
 <interface name="gnome.shell.mode"> \
 <method name="Eval"> \
     <arg type="s" direction="in" name="script" /> \
-    <arg type="s" direction="in" name="extension" /> \
+    <arg type="s" direction="in" name="projectRoot" /> \
     <arg type="s" direction="in" name="path" /> \
     <arg type="b" direction="out" name="success" /> \
     <arg type="s" direction="out" name="result" /> \
@@ -120,17 +121,25 @@ const EvalIface =
 ';
 
 let DbusObject = {
-    Eval: function (code, extension, path) {
+    Eval: function (code, projectRoot, path) {
+
+        let metadataFile = `${projectRoot}metadata.json`;
+        let uuid;
+        if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
+            const [success, rcCodeBytes] = GLib.file_get_contents(metadataFile);
+            uuid = JSON.parse(rcCodeBytes.toString()).uuid;
+        }
 
         emacs.module = {};
         // Set up module we're in
-        if (path.endsWith('.js')) {
+        if (path.endsWith('.js') && uuid !== undefined) {
             path = path.substring(0, path.length - 3);
-            // We try in case the extension module has syntax errors
+            // We try in case the projectRoot module has syntax errors
             try {
                 let empty = {};
                 let Extension =
-                    imports.misc.extensionUtils.extensions[extension];
+                    imports.misc.extensionUtils.extensions[uuid];
+
                 emacs.module = path.split('/').reduce((module, name) => {
                     if (module[name]) {
                         return module[name];
