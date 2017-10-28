@@ -266,30 +266,3 @@ emacs.completion_candidates = (text) => {
 
     return completions.filter((x) => {return x.startsWith(attrHead); });
 };
-
-
-function pp_test_repl() {
-    "asdf"
-    a={a:gobj}
-    //: {"a":"[object instance proxy GType:MetaWindowX11 jsobj@0x7fa7beb07070 native@0x444eab0]"}
-    gobj = global.display.focus_window;
-    //: [object instance proxy GType:MetaWindowX11 jsobj@0x7fa7beb07070 native@0x444eab0]
-    emacs.pp_object(undefined)
-    //: "undefined"
-    emacs.pp_object(null)
-    //: "null"
-    emacs.pp_object(1)
-    "asdf"
-    a={a:gobj}
-    //: {"a":"[object instance proxy GType:MetaWindowX11 jsobj@0x7fa7beb07070 native@0x444eab0]"}
-    emacs.pp_object("a string")
-    //: "\"a string\""
-    a=emacs.pp_object({key:2})
-    //: "{\"key\":2}"
-    a=emacs.pp_object({key:"a string"})
-    //: "{\"key\":\"a string\"}"
-    a=emacs.pp_object({key:[gobj]})
-    //: "{\"key\":[\"[object instance proxy GType:MetaWindowX11 jsobj@0x7fa7beb07070 native@0x444eab0]\"]}"
-    JSON.stringify({key:2, nested:{a:2.3}})
-    //: "{\"key\":2,\"nested\":{\"a\":2.3}}"
-}
