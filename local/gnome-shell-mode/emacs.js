@@ -142,6 +142,11 @@ let DbusObject = {
                 // `emacs.module.` so that re-assignment works
                 if (emacs.module !== empty) {
                     code = code.replace(/^var /g, 'emacs.module.');
+                    // rewrite function syntax assignment
+                    code = code.replace(/^function\s+(.*)\(/,
+                                        'emacs.module.$1 = function(');
+                    code = code.replace(/^const /g, 'emacs.module.');
+                    code = code.replace(/^let /g, 'emacs.module.');
                 }
             } catch(e) {
                 print(`Couldn't load module, will evaluate without: ${e.message}`)
