@@ -137,51 +137,24 @@ const EvalIface =
 
 let DbusObject = {
     Eval: function (code, path) {
-        let projectRoot = findExtensionRoot(path);
+        try {
+            // (We try in case the module has syntax errors)
+            emacs.module = this.findModule(path);
+        } catch(e) {
+            emacs.module = {};
+            print(`Couldn't load module, will evaluate without: ${e.message}`)
+        }
 
-        emacs.module = {};
+        if (Object.keys(emacs.module).length > 0) {
+            // We're in a module and we can replace `var` with
+            // `emacs.module.` so that re-assignment works
 
-        if (projectRoot !== null) {
-            // (projectRoot does not end with slash)
-            let relPath = path.slice(projectRoot.length+1)
-
-            let metadataFile = `${projectRoot}/metadata.json`;
-            let uuid;
-            if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
-                const [success, metadata] = GLib.file_get_contents(metadataFile);
-                uuid = JSON.parse(metadata.toString()).uuid;
-            }
-
-            // Set up module we're in
-            if (relPath.endsWith('.js') && uuid !== undefined) {
-                relPath = relPath.substring(0, relPath.length - 3);
-                // We try in case the projectRoot module has syntax errors
-                try {
-                    let empty = {};
-                    let Extension =
-                        imports.misc.extensionUtils.extensions[uuid];
-
-                    emacs.module = relPath.split('/').reduce((module, name) => {
-                        if (module[name]) {
-                            return module[name];
-                        }
-                        return empty;
-                    }, Extension.imports);
-
-                    // We're in a module and we can replace `var` with
-                    // `emacs.module.` so that re-assignment works
-                    if (emacs.module !== empty) {
-                        code = code.replace(/^var /g, 'emacs.module.');
-                        // rewrite function syntax assignment
-                        code = code.replace(/^function\s+(.*)\(/,
-                                            'emacs.module.$1 = function(');
-                        code = code.replace(/^const /g, 'emacs.module.');
-                        code = code.replace(/^let /g, 'emacs.module.');
-                    }
-                } catch(e) {
-                    print(`Couldn't load module, will evaluate without: ${e.message}`)
-                }
-            }
+            code = code.replace(/^var /g, 'emacs.module.');
+            // rewrite function syntax assignment
+            code = code.replace(/^function\s+(.*)\(/,
+                                'emacs.module.$1 = function(');
+            code = code.replace(/^const /g, 'emacs.module.');
+            code = code.replace(/^let /g, 'emacs.module.');
         }
 
         let eval_result;
@@ -227,6 +200,44 @@ let DbusObject = {
             success = false;
         }
         return [success, JSON.stringify(result)];
+    },
+
+    findModule: function(moduleFilePath) {
+        let projectRoot = findExtensionRoot(moduleFilePath);
+        let empty = {}
+        if (projectRoot === null) {
+            return empty;
+        }
+
+        // (projectRoot does not end with slash)
+        let relPath = moduleFilePath.slice(projectRoot.length+1)
+
+        let metadataFile = `${projectRoot}/metadata.json`;
+        let uuid;
+        if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
+            const [success, metadata] = GLib.file_get_contents(metadataFile);
+            uuid = JSON.parse(metadata.toString()).uuid;
+        }
+
+        if (uuid === undefined) {
+            return empty;
+        }
+
+        // Find the module object we're in
+        if (relPath.endsWith('.js') && uuid !== undefined) {
+            relPath = relPath.substring(0, relPath.length - 3);
+            let Extension =
+                imports.misc.extensionUtils.extensions[uuid];
+
+            return relPath.split('/').reduce((module, name) => {
+                if (module[name]) {
+                    return module[name];
+                }
+                return empty;
+            }, Extension.imports);
+        } else {
+            return null;
+        }
     }
 };
 
