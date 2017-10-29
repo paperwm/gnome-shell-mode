@@ -1,9 +1,6 @@
 ## gnome-shell-mode
 
-gnome-shell-mode makes it easy to interactively explore and evaluate javascript in a Gnome Shell session. It works through the dbus interface provided by Gnome Shell.
-
-While gnome-shell-mode haven't crashed in a while for us
-it's definitely alpha software and might still crash your Gnome Shell session, use with at your own risk.
+gnome-shell-mode makes it easy to interactively explore and evaluate javascript in a Gnome Shell session. It supports file local evaluation and auto-completion when working on a loaded Gnome Shell extension.
 
 ## Installation
 
@@ -37,8 +34,46 @@ There's two non-standard keybindings:
 - <kbd>Return</kbd> will evaluate the active region (if evil is used)
 - <kbd>C-Return</kbd> will evaluate the active region, or the current line if there's no region active. It will then insert the result as a comment on the next line.
 
+## Gnome Shell extension support
+
+Auto-completion and evaluation happens in the file local scope when editing a loaded extension, but will of course fall back to the global scope.
+
+A small example of how this works in practice. Lets say you have a successfully loaded extension in the directory `MyExtension/`and you have some silly functions in `MyExtension/functions.js`:
+
+```javascript
+function helloWorld (hello, world) {
+  return `${hello} ${world}`;
+}
+
+function printHelloWorld() {
+  print(helloWorld('hello', 'world'));
+}
+
+```
+
+Now yout want `helloWorld` to also add some exclamation marks:
+```javascript
+function helloWorld (hello, world) {
+  return `${hello} ${world}!!!`;
+}
+```
+
+After having made this change you can simply re-evaluate the function (eg. by <kbd>, s f</kbd>) and `printHelloWorld` will pick up the change.
+
+This is done by looking up the extension object through the `uuid` from the `metadata.json` file, and then looking up the module object through the extension relative file path:
+ ```javascript
+let Extension = imports.misc.extensionUtils.extensions[uuid];
+let module = Extension.imports.path.to.current.file;
+```
+
+Having the module object we can simply use ``eval(`with(module) { ${code} }`)`` so re-evaluated code will have the correct closure.
+
+Reassignment is handled by translating eg. `function name () {}` to `module.name = function () {}` and `var foo = 'bar';` to `module.foo = 'bar';`. At the moment this is done by regular expressions looking for `function` and `var` at the start of lines, so code that isn't indented properly will not evaluate correctly.
+
 ## Caveats
 
-Not all methods of GObjects (g-object-introspected classes) complete before they're used the first time. This include alot of classes you'll interact with. eg. `MetaWindow`. We're unsure how to fix this. Suggestions are welcome.
+Not all methods of GObjects (g-object-introspected classes) complete before they're used the first time. This include a lot of classes you'll interact with. eg. `MetaWindow`. We're unsure how to fix this. Suggestions are welcome.
 
 Completion doesn't work for string and function objects.
+
+While gnome-shell-mode shouldn't cause any crashes by itself, evaluating javascript in Gnome Shell is not completely safe, some code will result in a crash. Eg. looking up a non-existing dconf/schema name will cause a crash.
