@@ -126,8 +126,8 @@ let DbusObject = {
         let metadataFile = `${projectRoot}metadata.json`;
         let uuid;
         if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
-            const [success, rcCodeBytes] = GLib.file_get_contents(metadataFile);
-            uuid = JSON.parse(rcCodeBytes.toString()).uuid;
+            const [success, metadata] = GLib.file_get_contents(metadataFile);
+            uuid = JSON.parse(metadata.toString()).uuid;
         }
 
         emacs.module = {};
