@@ -105,13 +105,27 @@ emacs.pp_object = function(obj) {
     }
 }
 
+/** pathString: absolute path to a js file descending from the extension root */
+function findExtensionRoot(pathString) {
+    let path = Gio.file_new_for_path(pathString);
+    let dir = path.get_parent();
+
+    while (dir !== null) {
+        let metadata = dir.get_child("metadata.json");
+        if (metadata.query_exists(null)) {
+            return dir.get_path();
+        }
+        dir = dir.get_parent();
+    }
+    return null;
+}
+
 const EvalIface =
 '\
 <node> \
 <interface name="gnome.shell.mode"> \
 <method name="Eval"> \
     <arg type="s" direction="in" name="script" /> \
-    <arg type="s" direction="in" name="projectRoot" /> \
     <arg type="s" direction="in" name="path" /> \
     <arg type="b" direction="out" name="success" /> \
     <arg type="s" direction="out" name="result" /> \
@@ -120,45 +134,53 @@ const EvalIface =
 </node> \
 ';
 
-let DbusObject = {
-    Eval: function (code, projectRoot, path) {
 
-        let metadataFile = `${projectRoot}metadata.json`;
-        let uuid;
-        if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
-            const [success, metadata] = GLib.file_get_contents(metadataFile);
-            uuid = JSON.parse(metadata.toString()).uuid;
-        }
+let DbusObject = {
+    Eval: function (code, path) {
+        let projectRoot = findExtensionRoot(path);
 
         emacs.module = {};
-        // Set up module we're in
-        if (path.endsWith('.js') && uuid !== undefined) {
-            path = path.substring(0, path.length - 3);
-            // We try in case the projectRoot module has syntax errors
-            try {
-                let empty = {};
-                let Extension =
-                    imports.misc.extensionUtils.extensions[uuid];
 
-                emacs.module = path.split('/').reduce((module, name) => {
-                    if (module[name]) {
-                        return module[name];
+        if (projectRoot !== null) {
+            // (projectRoot does not end with slash)
+            let relPath = path.slice(projectRoot.length+1)
+
+            let metadataFile = `${projectRoot}/metadata.json`;
+            let uuid;
+            if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
+                const [success, metadata] = GLib.file_get_contents(metadataFile);
+                uuid = JSON.parse(metadata.toString()).uuid;
+            }
+
+            // Set up module we're in
+            if (relPath.endsWith('.js') && uuid !== undefined) {
+                relPath = relPath.substring(0, relPath.length - 3);
+                // We try in case the projectRoot module has syntax errors
+                try {
+                    let empty = {};
+                    let Extension =
+                        imports.misc.extensionUtils.extensions[uuid];
+
+                    emacs.module = relPath.split('/').reduce((module, name) => {
+                        if (module[name]) {
+                            return module[name];
+                        }
+                        return empty;
+                    }, Extension.imports);
+
+                    // We're in a module and we can replace `var` with
+                    // `emacs.module.` so that re-assignment works
+                    if (emacs.module !== empty) {
+                        code = code.replace(/^var /g, 'emacs.module.');
+                        // rewrite function syntax assignment
+                        code = code.replace(/^function\s+(.*)\(/,
+                                            'emacs.module.$1 = function(');
+                        code = code.replace(/^const /g, 'emacs.module.');
+                        code = code.replace(/^let /g, 'emacs.module.');
                     }
-                    return empty;
-                }, Extension.imports);
-
-                // We're in a module and we can replace `var` with
-                // `emacs.module.` so that re-assignment works
-                if (emacs.module !== empty) {
-                    code = code.replace(/^var /g, 'emacs.module.');
-                    // rewrite function syntax assignment
-                    code = code.replace(/^function\s+(.*)\(/,
-                                        'emacs.module.$1 = function(');
-                    code = code.replace(/^const /g, 'emacs.module.');
-                    code = code.replace(/^let /g, 'emacs.module.');
+                } catch(e) {
+                    print(`Couldn't load module, will evaluate without: ${e.message}`)
                 }
-            } catch(e) {
-                print(`Couldn't load module, will evaluate without: ${e.message}`)
             }
         }
 
