@@ -42,8 +42,7 @@
 
 
 (defconst gnome-shell--helper-path
-  (concat (file-name-directory (or load-file-name buffer-file-name))
-          "emacs.js"))
+  (file-name-directory (or load-file-name buffer-file-name)))
 
 (defconst gnome-shell-gjs-documentation-url
   "https://people.gnome.org/~gcampagna/docs/")
@@ -155,12 +154,15 @@ If success:
 If error:
   Most properties from Error. Eg. 'message, 'stack, 'lineNumber, 'columnNumber,
 'file"
-  (unless (car (gnome-shell--dbus-bootstrap-eval "emacs === undefined"))
+  (unless (car (gnome-shell--dbus-bootstrap-eval
+                "imports.misc.extensionUtils.extensions['gnome-shell-mode@hedning:matrix.org'].state !== 1"))
     ;; send init code
     (message "sending init code")
     (with-temp-buffer
-      (insert-file-contents gnome-shell--helper-path)
-      (gnome-shell--dbus-bootstrap-eval (buffer-string))))
+      (insert-file-contents
+       (concat gnome-shell--helper-path "bootstrap.js"))
+      (gnome-shell--dbus-bootstrap-eval
+       (concat (buffer-string) "('" gnome-shell--helper-path "')"))))
 
   ;; HACK: The init code changes the Eval method
   (destructuring-bind (successp jsonres)
