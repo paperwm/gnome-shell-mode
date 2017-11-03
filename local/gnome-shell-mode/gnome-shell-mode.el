@@ -50,12 +50,13 @@
   "https://developer.gnome.org/symbols/")
 
 (defun gnome-shell--name-at-point ()
-  "Get current Name { ['.'|':'} Name } sequence."
+  "Get current Name { ['.'|[<number>|<variable>]} Name } sequence."
   ;; Taken from lua-mode.el
   ;; NB: copying/modifying syntax table for each call may incur a penalty
   (with-syntax-table (copy-syntax-table)
     (modify-syntax-entry ?. "_")
-    (modify-syntax-entry ?: "_")
+    (modify-syntax-entry ?\[ "_")
+    (modify-syntax-entry ?\] "_")
     (current-word t)))
 
 (defun gnome-shell-run-interactively (start end insert-result show-result)
