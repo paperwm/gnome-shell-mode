@@ -112,12 +112,16 @@ function findExtensionRoot(pathString) {
 
     while (dir !== null) {
         let metadata = dir.get_child("metadata.json");
+        let jsResource = dir.get_child("js-resources.gresource.xml");
         if (metadata.query_exists(null)) {
-            return dir.get_path();
+            return ['extension', dir.get_path()];
+        } else if (jsResource.query_exists(null)) {
+            // Indicate that we're in a the gnome-shell js file
+            return ['shell', dir.get_path()];
         }
         dir = dir.get_parent();
     }
-    return null;
+    return [null, null];
 }
 
 const EvalIface =
@@ -203,38 +207,43 @@ let DbusObject = {
     },
 
     findModule: function(moduleFilePath) {
-        let projectRoot = findExtensionRoot(moduleFilePath);
-        let empty = {}
-        if (projectRoot === null) {
+        let [type, projectRoot] = findExtensionRoot(moduleFilePath);
+        let empty = {};
+        if (projectRoot === null || type === null) {
             return empty;
         }
 
         // (projectRoot does not end with slash)
-        let relPath = moduleFilePath.slice(projectRoot.length+1)
+        let relPath = moduleFilePath.slice(projectRoot.length+1);
 
-        let metadataFile = `${projectRoot}/metadata.json`;
         let uuid;
-        if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
-            const [success, metadata] = GLib.file_get_contents(metadataFile);
-            uuid = JSON.parse(metadata.toString()).uuid;
-        }
-
-        if (uuid === undefined) {
-            return empty;
+        if (type === 'extension') {
+            let metadataFile = `${projectRoot}/metadata.json`;
+            if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
+                const [success, metadata] = GLib.file_get_contents(metadataFile);
+                uuid = JSON.parse(metadata.toString()).uuid;
+                if (uuid === undefined) {
+                    return empty;
+                }
+            }
         }
 
         // Find the module object we're in
-        if (relPath.endsWith('.js') && uuid !== undefined) {
+        if (relPath.endsWith('.js')) {
             relPath = relPath.substring(0, relPath.length - 3);
-            let Extension =
-                imports.misc.extensionUtils.extensions[uuid];
-
+            let moduleImports;
+            if (type === 'extension') {
+                moduleImports =
+                    imports.misc.extensionUtils.extensions[uuid].imports;
+            } else if (type === 'shell') {
+                moduleImports = imports;
+            }
             return relPath.split('/').reduce((module, name) => {
                 if (module[name]) {
                     return module[name];
                 }
                 return empty;
-            }, Extension.imports);
+            },  moduleImports);
         } else {
             return null;
         }
