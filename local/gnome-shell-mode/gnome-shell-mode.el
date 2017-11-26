@@ -144,7 +144,7 @@
   "Raw dbus eval call. Returns a list: (success/boolean result/string)"
   (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
                     "gnome.shell.mode" "Eval"
-                    cmd (buffer-file-name)))
+                    cmd (or (buffer-file-name) "")))
 
 (defun gnome-shell-eval (code)
   "Evaluates `code' in gnome-shell and returns an alist:
