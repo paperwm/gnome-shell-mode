@@ -105,35 +105,46 @@
         ;; Ensure that error occured in the evaled code
         ;; If not, we can check the stacktrace for where the failing code was
         ;; called
-        (let* ((column (alist-get 'columnNumber result-obj))
-               (line   (alist-get 'lineNumber result-obj))
-               (buf-line   (+ (line-number-at-pos start) line -1)) ;; 1 vs 0 indexed
-               (buf-column (+ (save-excursion
-                                (goto-char start)
-                                (current-column))
-                              column)))
-
-          ;; FIXME: When using gnome-shell-repl the flycheck error is cleared for some reason?
-          (flycheck-add-overlay 
-           (flycheck-error-new-at buf-line buf-column 'error result
-                                  :id 'gnome-shell-repl-error)))))
+        (gnome-shell--flycheck-error result-obj start end)))
 
     (when show-result
-      (let ((presented-result pp-result)
-            presented-face)
-
-        (cond ((and successp is-undefined)
-               (setq presented-face 'success)
-               (setq presented-result "[No return value]"))
-              ((not successp)
-               (setq presented-face 'error)
-               (when is-undefined
-                 (setq presented-result "[Error without message]"))))
-
-        (message (if presented-face (propertize presented-result 'face presented-face)
-                   presented-result))))
+      (gnome-shell--show-result result-obj))
 
     result))
+
+(defun gnome-shell--flycheck-error (result-obj start end)
+  (let* ((result   (alist-get 'value result-obj))
+         (column (alist-get 'columnNumber result-obj))
+         (line   (alist-get 'lineNumber result-obj))
+         (buf-line   (+ (line-number-at-pos start) line -1)) ;; 1 vs 0 indexed
+         (buf-column (+ (save-excursion
+                          (goto-char start)
+                          (current-column))
+                        column)))
+    ;; FIXME: When using gnome-shell-repl the flycheck error is cleared for some reason?
+    (flycheck-add-overlay 
+     (flycheck-error-new-at buf-line buf-column 'error result
+                            :id 'gnome-shell-repl-error))))
+
+(defun gnome-shell--show-result (result-obj)
+  (let* ((successp (eq (alist-get 'success result-obj) t))
+         (result   (alist-get 'value result-obj))
+         (is-undefined (alist-get 'undefined result-obj))
+         (pp-result (if result result
+                      (if is-undefined "undefined" "null")))
+         (presented-result pp-result)
+         presented-face)
+
+    (cond ((and successp is-undefined)
+           (setq presented-face 'success)
+           (setq presented-result "[No return value]"))
+          ((not successp)
+           (setq presented-face 'error)
+           (when is-undefined
+             (setq presented-result "[Error without message]"))))
+
+    (message (if presented-face (propertize presented-result 'face presented-face)
+               presented-result))))
 
 (defun gnome-shell--dbus-bootstrap-eval (cmd)
   "Function to bootstrap our own Eval"
