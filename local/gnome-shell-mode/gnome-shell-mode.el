@@ -219,7 +219,6 @@ If error:
       (gnome-shell--dbus-bootstrap-eval
        (concat (buffer-string) "('" gnome-shell--helper-path "')"))))
 
-  ;; HACK: The init code changes the Eval method
   (destructuring-bind (successp jsonres)
       (gnome-shell--dbus-eval code)
     (json-read-from-string jsonres)))
