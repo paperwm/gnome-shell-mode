@@ -71,6 +71,9 @@
                       (if is-undefined "undefined" "null"))))
     (when insert-result
       (save-excursion
+        ;; Always add a undo boundary
+        (undo-boundary)
+
         (end-of-line)
 
         (if (eobp)
