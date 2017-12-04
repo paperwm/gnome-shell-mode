@@ -190,7 +190,7 @@ let DbusObject = {
                     }
                 }
             } catch(e) {
-                throw new Error("Error during pretty printing: " + e.message);
+                result.value = "Error during pretty printing: " + e.message;
             }
 
         } catch(e) {
