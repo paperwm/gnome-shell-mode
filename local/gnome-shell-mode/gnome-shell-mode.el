@@ -157,6 +157,37 @@
                     "gnome.shell.mode" "Eval"
                     cmd (or (buffer-file-name) "")))
 
+(defun gnome-shell--dbus-reload ()
+  "Ask dbus to reload the extension."
+  (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
+                    "gnome.shell.mode" "Reload"
+                    (or (buffer-file-name) "")))
+
+(defun gnome-shell-reload ()
+  "Reload the extension currently being edited. The buffer will pulse green or
+red depending on the success of the reload."
+  (interactive)
+  (let* ((result-obj (destructuring-bind (successp jsonres)
+                         (gnome-shell--dbus-reload)
+                       (json-read-from-string jsonres)))
+         (successp (eq (alist-get 'success result-obj) t))
+         (result   (alist-get 'value result-obj))
+         (is-undefined (alist-get 'undefined result-obj))
+         ;; The result is already reasonable pretty, but we need to represent
+         ;; null values
+         (pp-result (if result result
+                      (if is-undefined "undefined" "null")))
+         (start (point-min))
+         (end (point-max)))
+
+    (pulse-momentary-highlight-region start end
+                                      (if successp
+                                          'diff-refine-added
+                                        'diff-refine-removed))
+    (unless successp
+      (gnome-shell--flycheck-error result-obj start end))
+    (gnome-shell--show-result result-obj)))
+
 (defun gnome-shell-eval (code)
   "Evaluates `code' in gnome-shell and returns an alist:
   'success : true if no error occured

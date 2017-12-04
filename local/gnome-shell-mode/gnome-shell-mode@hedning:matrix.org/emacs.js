@@ -134,6 +134,11 @@ const EvalIface =
     <arg type="b" direction="out" name="success" /> \
     <arg type="s" direction="out" name="result" /> \
 </method> \
+<method name="Reload"> \
+    <arg type="s" direction="in" name="path" /> \
+    <arg type="b" direction="out" name="success" /> \
+    <arg type="s" direction="out" name="result" /> \
+</method> \
 </interface> \
 </node> \
 ';
@@ -204,6 +209,41 @@ let DbusObject = {
             success = false;
         }
         return [success, JSON.stringify(result)];
+    },
+
+    /**
+     * Reload the the path by disabling the extension, re-evaluate the code in
+     * the path and enable the extension again.
+     */
+    Reload: function(path) {
+        // Make sure that we're in an ext
+        let [type, root] = findExtensionRoot(path);
+
+        let uuid;
+        if (type === 'extension') {
+            let metadataFile = `${root}/metadata.json`;
+            if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
+                const [success, metadata] = GLib.file_get_contents(metadataFile);
+                uuid = JSON.parse(metadata.toString()).uuid;
+                if (uuid === undefined) {
+                    return [false, 'Extension is missing the uuid'];
+                }
+            }
+        } else {
+            return [false, 'Not a valid extension'];
+        }
+
+        let extension = imports.misc.extensionUtils.extensions[uuid];
+        let modules = extension.imports.extension.modules;
+        // Disable the extension
+        extension.imports.extension.disable();
+
+        // Reload the modules
+        const [success, code] = GLib.file_get_contents(path);
+        const [evalSuccess, result] = this.Eval(code.toString(), path);
+        // Enable the extension again
+        extension.imports.extension.enable();
+        return [evalSuccess, result];
     },
 
     findModule: function(moduleFilePath) {
