@@ -143,6 +143,14 @@ const EvalIface =
 </node> \
 ';
 
+/**
+ * Desctructively apply lines[i].replace(regex, replacement)
+ */
+function replaceAll(lines, regex, replacement) {
+    lines.forEach((line, i) => {
+        lines[i] = lines[i].replace(regex, replacement);
+    })
+}
 
 let DbusObject = {
     Eval: function (code, path) {
@@ -157,13 +165,16 @@ let DbusObject = {
         if (Object.keys(emacs.module).length > 0) {
             // We're in a module and we can replace `var` with
             // `emacs.module.` so that re-assignment works
+            let lines = code.split('\n');
 
-            code = code.replace(/^var /g, 'emacs.module.');
+            replaceAll(lines, /^var /g, 'emacs.module.');
             // rewrite function syntax assignment
-            code = code.replace(/^function\s+(.*)\(/,
-                                'emacs.module.$1 = function(');
-            code = code.replace(/^const /g, 'emacs.module.');
-            code = code.replace(/^let /g, 'emacs.module.');
+            replaceAll(lines, /^function\s+(.*)\(/g,
+                              'emacs.module.$1 = function(');
+            replaceAll(lines, /^const /g, 'emacs.module.');
+            replaceAll(lines, /^let /g, 'emacs.module.');
+
+            code = lines.join('\n')
         }
 
         let eval_result;
