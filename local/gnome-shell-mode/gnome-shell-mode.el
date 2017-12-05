@@ -184,6 +184,7 @@
   "Ask dbus to reload the extension."
   (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
                     "gnome.shell.mode" "Reload"
+                    (buffer-string)
                     (or (buffer-file-name) "")))
 
 (defun gnome-shell-reload ()

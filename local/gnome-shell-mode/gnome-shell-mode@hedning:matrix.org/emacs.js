@@ -34,6 +34,7 @@ const EvalIface =
     <arg type="s" direction="out" name="result" /> \
 </method> \
 <method name="Reload"> \
+    <arg type="s" direction="in" name="code" /> \
     <arg type="s" direction="in" name="path" /> \
     <arg type="b" direction="out" name="success" /> \
     <arg type="s" direction="out" name="result" /> \
@@ -125,7 +126,7 @@ let DbusObject = {
      * Reload the the path by disabling the extension, re-evaluate the code in
      * the path and enable the extension again.
      */
-    Reload: function(path) {
+    Reload: function(code, path) {
         // Make sure that we're in an ext
         let [type, root] = findExtensionRoot(path);
 
@@ -149,8 +150,7 @@ let DbusObject = {
         extension.imports.extension.disable();
 
         // Reload the modules
-        const [success, code] = GLib.file_get_contents(path);
-        const [evalSuccess, result] = this.Eval(code.toString(), path);
+        const [evalSuccess, result] = this.Eval(code, path);
         // Enable the extension again
         extension.imports.extension.enable();
         return [evalSuccess, result];
