@@ -163,6 +163,17 @@
   (dbus-call-method :session "org.gnome.Shell" "/org/gnome/Shell"
                     "org.gnome.Shell" "Eval" cmd))
 
+(defun gnome-shell--ensure-bootstrap ()
+  (unless (car (gnome-shell--dbus-bootstrap-eval
+                "imports.misc.extensionUtils.extensions['gnome-shell-mode@hedning:matrix.org'].state !== 1"))
+    ;; send init code
+    (message "sending init code")
+    (with-temp-buffer
+      (insert-file-contents
+       (concat gnome-shell--helper-path "bootstrap.js"))
+      (gnome-shell--dbus-bootstrap-eval
+       (concat (buffer-string) "('" gnome-shell--helper-path "')")))))
+
 (defun gnome-shell--dbus-eval (cmd)
   "Raw dbus eval call. Returns a list: (success/boolean result/string)"
   (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
@@ -179,6 +190,7 @@
   "Reload the extension currently being edited. The buffer will pulse green or
 red depending on the success of the reload."
   (interactive)
+  (gnome-shell--ensure-bootstrap)
   (let* ((result-obj (destructuring-bind (successp jsonres)
                          (gnome-shell--dbus-reload)
                        (json-read-from-string jsonres)))
@@ -209,15 +221,7 @@ If success:
 If error:
   Most properties from Error. Eg. 'message, 'stack, 'lineNumber, 'columnNumber,
 'file"
-  (unless (car (gnome-shell--dbus-bootstrap-eval
-                "imports.misc.extensionUtils.extensions['gnome-shell-mode@hedning:matrix.org'].state !== 1"))
-    ;; send init code
-    (message "sending init code")
-    (with-temp-buffer
-      (insert-file-contents
-       (concat gnome-shell--helper-path "bootstrap.js"))
-      (gnome-shell--dbus-bootstrap-eval
-       (concat (buffer-string) "('" gnome-shell--helper-path "')"))))
+  (gnome-shell--ensure-bootstrap)
 
   (destructuring-bind (successp jsonres)
       (gnome-shell--dbus-eval code)
