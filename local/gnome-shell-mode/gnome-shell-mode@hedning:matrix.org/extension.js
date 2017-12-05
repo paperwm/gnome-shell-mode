@@ -106,7 +106,7 @@ emacs.pp_object = function(obj) {
     }
 }
 
-emacs.completion_candidates = emacs.completion_candidates;
+emacs.completion_candidates = Emacs.completion_candidates;
 
 function init() {
     print('init gnome-shell-mode server')
