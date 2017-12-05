@@ -195,12 +195,6 @@ red depending on the success of the reload."
                          (gnome-shell--dbus-reload)
                        (json-read-from-string jsonres)))
          (successp (eq (alist-get 'success result-obj) t))
-         (result   (alist-get 'value result-obj))
-         (is-undefined (alist-get 'undefined result-obj))
-         ;; The result is already reasonable pretty, but we need to represent
-         ;; null values
-         (pp-result (if result result
-                      (if is-undefined "undefined" "null")))
          (start (point-min))
          (end (point-max)))
 
