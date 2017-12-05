@@ -96,11 +96,11 @@
                       (concat "//" marker)
                     (concat
                      "/*" marker "\n"
-                     (replace-regexp-in-string "\\\n" "\n" (replace-regexp-in-string "^" " " pp-result))
+                     (replace-regexp-in-string
+                      "\\\\n" "\n"
+                      (replace-regexp-in-string "^" " " pp-result))
                      "\n" marker "*/"
-                     ))))
-
-        ))
+                     ))))))
 
     (when (or show-result insert-result)
       ;; This was an interactive action so we give the user appropriate feedback
