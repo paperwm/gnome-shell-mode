@@ -141,6 +141,60 @@ function replaceAll(lines, regex, replacement) {
     })
 }
 
+function parseAndReplace(code, prefix) {
+    // Let line 0 be the start so the line numbers are aligned with lines indexing
+    let ast = Reflect.parse(code, {line: 0});
+    let lines = code.split('\n');
+    let newLines = [];
+    // Loop over all toplevel statements
+    for (let statement of ast.body) {
+        if (statement.type === 'VariableDeclaration') {
+            let replacement = '';
+            for (let declaration of statement.declarations) {
+                replacement += prefix + declaration.id.name;
+                if (declaration.init) {
+                    replacement += '=' + span(lines, declaration.init.loc);
+                } else {
+                    // Handle cases like 'let foo'
+                    replacement += '= undefined';
+                }
+                replacement += ',';
+            }
+            replacement = replacement.replace(/,$/, ';');
+            newLines.push(replacement);
+        } else if (statement.type === 'FunctionDeclaration') {
+            let replacement = prefix + statement.id.name + ' = function ';
+            replacement += '(';
+            for (let param of statement.params) {
+                replacement += span(lines, param.loc) + ',';
+            }
+            replacement = replacement.replace(/,$/, ')');
+            // For some reason the body.loc.end doesn't include } (but start includes {)
+            replacement += span(lines, {start: statement.body.loc.start,
+                                        end: statement.loc.end});
+            newLines.push(replacement);
+        } else {
+            newLines.push(span(lines, statement.loc));
+        }
+    }
+    return newLines.join('\n');
+}
+
+function span(lines, loc) {
+    let start = loc.start;
+    let end = loc.end;
+    let slice = lines.slice(start.line, end.line + 1);
+    if (start.line === end.line) {
+        slice[0] = slice[0].substring(start.column, end.column);
+    } else {
+        slice[0] = slice[0].substring(start.column);
+        slice[slice.length-1] = slice[slice.length-1].substring(0, end.column);
+    }
+    return slice.join('\n');
+}
+
+var parsedCodes = [];
+var codes = [];
 let DbusObject = {
     Eval: function (code, path) {
         try {
