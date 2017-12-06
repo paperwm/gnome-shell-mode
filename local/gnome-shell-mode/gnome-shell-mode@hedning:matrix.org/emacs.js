@@ -4,6 +4,95 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 
+/// Add custom printers here indexed by constructor name
+// (obj, key) => String or primitive to be serialized further to JSON
+// `key` is undefined if top-level object
+let pretty_printers = {};
+
+function pp_rect(xywh) {
+    let [x,y,w,h] = xywh.map( v => v.toFixed(1) );
+    return `{ x: ${x}, y: ${y}, w: ${w}, h: ${h} }`;
+}
+
+pretty_printers["Object"] = function(obj, key) {
+    if (obj.toString !== Object.prototype.toString) {
+        // The object have a custom toString method
+        return obj.toString();
+    } else {
+        // Let JSON handle it
+        return  obj;
+    }
+}
+
+pretty_printers["Array"] = function(obj, key) {
+    // Let JSON handle it
+    return obj;
+}
+
+
+pretty_printers["Clutter_ActorBox"] = function(box, key) {
+    let x = box.get_x();
+    let y = box.get_y();
+    let w = box.get_width();
+    let h = box.get_height();
+    return `ActorBox ${pp_rect([x,y,w,h])}`;
+}
+
+pretty_printers["Meta_Rectangle"] = function(box, key) {
+    return `Meta_Rectangle ${pp_rect([box.x, box.y, box.width, box.height])}`;
+}
+
+function pp_helper(key, obj) {
+    let type = typeof(obj);
+    let pretty;
+    if (type === "undefined") {
+        pretty = "undefined";
+    } else if (obj === null) {
+        pretty = "null";
+    } else if (type === "object") {
+        let constructor_name = obj.constructor.name;
+        let custom_pp_fn = pretty_printers[constructor_name];
+        if (custom_pp_fn) {
+            pretty = custom_pp_fn(obj, key);
+        } else {
+            pretty = obj.toString();
+        }
+    } else if (type === "function") {
+        // Just print the whole definition
+        pretty = obj.toString();
+    } else if (type === "string") {
+        // Could special case string so we're sure it's easier to
+        // differentiate between a string and a custom string representation
+        // of an object. Eg. by surrounding it by single quotes.
+        pretty = obj
+    } else {
+        // Let JSON handle it (Numbers, etc.)
+        pretty = obj;
+    }
+    return pretty;
+}
+
+function pp_object(obj) {
+    if (obj !== null && typeof(obj) === "object"
+        && (obj.constructor === Object || obj.constructor === Array))
+    {
+        // Use JSON.stringify as a poor man's pretty printer for simple
+        // composite objects
+        return JSON.stringify(obj, pp_helper);
+    } else if(typeof(obj) === "string") {
+        // A pretty string have quotes around it to not conceal it's true nature
+        return JSON.stringify(obj);
+    } else {
+        // Top level simple or complex constructor
+        let pretty = pp_helper(undefined, obj);
+        if(typeof(pretty) !== "string") {
+            // Emacs expects a string, even for numbers
+            pretty = JSON.stringify(pretty);
+        }
+        return pretty;
+    }
+}
+
 /** pathString: absolute path to a js file descending from the extension root */
 function findExtensionRoot(pathString) {
     let path = Gio.file_new_for_path(pathString);
@@ -87,7 +176,7 @@ let DbusObject = {
             };
 
             try {
-                result.value = emacs.pp_object(eval_result)
+                result.value = pp_object(eval_result)
 
                 if (eval_result && eval_result.constructor === Array) {
                     // Also return the actual object. Currently used by the
