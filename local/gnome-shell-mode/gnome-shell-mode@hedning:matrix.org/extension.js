@@ -4,23 +4,22 @@ const Emacs = Extension.imports.emacs;
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
 
-emacs = {};
-
-emacs.verbose = true;
-
-emacs.find_property = GObject.Object.find_property;
-emacs.list_properties = GObject.Object.list_properties;
-
-// Probably possible to extract from the error stack, but hardcode for now
-// Note: will change if newEval is redefined, restart gnome-shell when making
-// changes to this code for now
-// in gnome-shell 3.24.3 eval lineNumber is correct!
-emacs.eval_line_offset = 0; 
-
-emacs.completion_candidates = Emacs.completion_candidates;
-
 function init() {
     print('init gnome-shell-mode server')
+    window.emacs = {};
+
+    emacs.verbose = true;
+
+    emacs.find_property = GObject.Object.find_property;
+    emacs.list_properties = GObject.Object.list_properties;
+
+    // Probably possible to extract from the error stack, but hardcode for now
+    // Note: will change if newEval is redefined, restart gnome-shell when making
+    // changes to this code for now
+    // in gnome-shell 3.24.3 eval lineNumber is correct!
+    emacs.eval_line_offset = 0; 
+
+    emacs.completion_candidates = Emacs.completion_candidates;
 }
 
 let dbusImpl;
