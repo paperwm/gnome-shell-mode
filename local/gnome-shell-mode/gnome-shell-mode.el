@@ -80,9 +80,9 @@
             (newline)
           (forward-line))
 
-        (when (looking-at "/\\*[:!]")
+        (when (looking-at "/\\*:[ !]")
           (message "delete lines")
-          (while (or (not (looking-at "[:!]\\*/")) (eolp))
+          (while (and (not (looking-at ":[ !]\\*/")) (not (eolp)))
             (kill-whole-line))
           ;; Kill the line containing ':!' or `: ' too
           (kill-whole-line))
@@ -90,7 +90,7 @@
         (newline)
         (forward-line -1)
 
-        (let ((marker (if successp ":" ":!")))
+        (let ((marker (if successp ": " ":!")))
           (insert (if (string-equal "" pp-result)
                       ;; replace-regexp-in-string is buggy for empty strings
                       (concat "//" marker)
