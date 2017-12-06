@@ -151,7 +151,15 @@ function parseAndReplace(code, prefix) {
         if (statement.type === 'VariableDeclaration') {
             let replacement = '';
             for (let declaration of statement.declarations) {
-                replacement += prefix + declaration.id.name;
+                if (declaration.id.type == "Identifier") {
+                    replacement += prefix + declaration.id.name;
+                } else if (declaration.id.type === 'ObjectPattern') {
+                    // Placeholder for proper handling of destructuring
+                    replacement += statement.kind + ' ' + span(declaration.id.loc);
+                } else if (declaration.id.type === 'ArrayPattern') {
+                    replacement += statement.kind + ' ' + span(declaration.id.loc);
+                }
+
                 if (declaration.init) {
                     replacement += '=' + span(lines, declaration.init.loc);
                 } else {
