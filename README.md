@@ -34,7 +34,17 @@ There's two non-standard keybindings:
 - <kbd>Return</kbd> will evaluate the active region (if evil is used)
 - <kbd>C-Return</kbd> will evaluate the active region, or the current line if there's no region active. It will then insert the result as a comment on the next line.
 
-## Gnome Shell extension support
+### Reload
+
+The mode supports reloading buffers with <kbd>, r</kbd>. This works by first disabling the extension, re-evaluating the whole buffer in the correct scope, and then enabling the extension again.
+
+To get full use of this, `enable` and `disable` need to assemble and disassemble all the state in the extension. A good way to handle this is having `enable` and `disable` functions in every module, making the exension's `enable` and `disable` just call out to the module's functions.
+
+### Documentation lookup
+
+There's basic support for documentation lookup using <kbd>, h h</kbd>. This will prompt you with a list of known symbols matching the current word, selecting one will open the documentation of that symbol in your browser.
+
+### Gnome Shell extension support
 
 Auto-completion and evaluation happens in the file local scope when editing a loaded extension. When editing a file not part of an extension the system creates an ad-hoc scope for the file.
 
