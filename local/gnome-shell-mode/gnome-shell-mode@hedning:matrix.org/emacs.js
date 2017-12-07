@@ -150,20 +150,29 @@ function parseAndReplace(code, prefix) {
     let ast = Reflect.parse(code, {line: 0});
     let lines = code.split('\n');
     let newLines = [];
+    let sourceMap = [];
+    let linebreaks = 0;
     // Loop over all toplevel statements
     for (let statement of ast.body) {
+        let newStatement;
         switch (statement.type) {
         case 'VariableDeclaration':
-            newLines.push(variableDeclaration(lines, statement, prefix));
+            newStatement = variableDeclaration(lines, statement, prefix);
             break;
         case 'FunctionDeclaration':
-            newLines.push(functionDeclaration(lines, statement, prefix));
+            newStatement = functionDeclaration(lines, statement, prefix);
             break;
         default:
-            newLines.push(span(lines, statement.loc) + ';');
+            newStatement = span(lines, statement.loc) + ';';
         }
+
+        sourceMap.push(
+            {source: statement.loc.start.line,
+             sink: newLines.length + linebreaks});
+        linebreaks += Math.max(0, newStatement.split('\n').length - 1);
+        newLines.push(newStatement);
     }
-    return newLines.join('\n');
+    return [newLines.join('\n'), sourceMap];
 }
 
 /**
@@ -278,6 +287,14 @@ function objectPattern(lines, objpattern, prefix) {
     return replacement;
 }
 
+function mapLine(sourceMap, line) {
+    let i = sourceMap.length-1;
+    while (i > 0 && sourceMap[i].sink > line) {
+        i--;
+    }
+    return sourceMap[i].source + (line - sourceMap[i].sink);
+}
+
 let fileScopes = {};
 let DbusObject = {
     Eval: function (code, path) {
@@ -296,11 +313,12 @@ let DbusObject = {
             emacs.module = fileScopes[path];
         }
 
+        let sourceMap;
         let eval_result;
         let result;
         let success = true;
         try {
-            code = parseAndReplace(code, 'emacs.module.');
+            [code, sourceMap] = parseAndReplace(code, 'emacs.module.');
             eval_result =  (0, eval)(`with(emacs.module){ ${code} }`);
             result = {
                 success: true,
@@ -326,6 +344,12 @@ let DbusObject = {
 
         } catch(e) {
             // Note: JSON.stringify(e) doesn't reliably include all fields
+            if (sourceMap) {
+                // lineNumber should be zero indexed, but for some is too big
+                // No idea why we need `+ 2`, as we really should get back a
+                // zero indexed line
+                e.lineNumber = mapLine(sourceMap, e.lineNumber - 1) + 2;
+            }
             result = {
                 success: false,
                 value: e.message,
