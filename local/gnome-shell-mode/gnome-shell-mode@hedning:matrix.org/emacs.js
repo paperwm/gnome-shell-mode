@@ -252,8 +252,6 @@ function objectPattern(lines, objpattern, prefix) {
     return replacement;
 }
 
-var parsedCodes = [];
-var codes = [];
 let DbusObject = {
     Eval: function (code, path) {
         try {
@@ -264,42 +262,11 @@ let DbusObject = {
             print(`Couldn't load module, will evaluate without: ${e.message}`)
         }
 
-        let parsedcode;
-        try {
-            parsedcode = parseAndReplace(code, 'emacs.module.');
-        } catch(e) {
-            print('Parsing broke down: ' + e.message + e.lineNumber);
-        }
-
-        parsedCodes.push(parsedcode);
-        codes.push(code);
-        print(parsedcode.replace(/\n/g, '\t'));
-
-        try {
-            (0, eval)(`with(emacs.module){${parsedcode}}`);
-        } catch(e) {
-            print('eval didnt work', e.message)
-        }
-
-        if (Object.keys(emacs.module).length > 0) {
-            // We're in a module and we can replace `var` with
-            // `emacs.module.` so that re-assignment works
-            let lines = code.split('\n');
-
-            replaceAll(lines, /^var /g, 'emacs.module.');
-            // rewrite function syntax assignment
-            replaceAll(lines, /^function\s+(.*)\(/g,
-                              'emacs.module.$1 = function(');
-            replaceAll(lines, /^const /g, 'emacs.module.');
-            replaceAll(lines, /^let /g, 'emacs.module.');
-
-            code = lines.join('\n')
-        }
-
         let eval_result;
         let result;
         let success = true;
         try {
+            code = parseAndReplace(code, 'emacs.module.');
             eval_result =  (0, eval)(`with(emacs.module){ ${code} }`);
             result = {
                 success: true,
