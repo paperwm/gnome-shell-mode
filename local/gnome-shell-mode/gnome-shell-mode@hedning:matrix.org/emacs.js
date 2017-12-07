@@ -176,7 +176,8 @@ function parseAndReplace(code, prefix) {
             for (let param of statement.params) {
                 replacement += span(lines, param.loc) + ',';
             }
-            replacement = replacement.replace(/,$/, ')');
+            replacement = replacement.replace(/,$/, '');
+            replacement += ')';
             // For some reason the body.loc.end doesn't include } (but start includes {)
             replacement += span(lines, {start: statement.body.loc.start,
                                         end: statement.loc.end});
