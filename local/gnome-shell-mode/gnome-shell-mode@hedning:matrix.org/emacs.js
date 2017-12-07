@@ -252,14 +252,22 @@ function objectPattern(lines, objpattern, prefix) {
     return replacement;
 }
 
+let fileScopes = {};
 let DbusObject = {
     Eval: function (code, path) {
         try {
             // (We try in case the module has syntax errors)
             emacs.module = this.findModule(path);
         } catch(e) {
-            emacs.module = {};
-            print(`Couldn't load module, will evaluate without: ${e.message}`)
+            emacs.module = null;
+            print(`Couldn't load module, fall back to default scope: ${e.message}`)
+        }
+
+        // Create a new scope, indexed by the path
+        if (emacs.module === null) {
+            if (!fileScopes[path])
+                fileScopes[path] = {};
+            emacs.module = fileScopes[path];
         }
 
         let eval_result;
@@ -346,7 +354,7 @@ let DbusObject = {
         let [type, projectRoot] = findExtensionRoot(moduleFilePath);
         let empty = {};
         if (projectRoot === null || type === null) {
-            return empty;
+            return null;
         }
 
         // (projectRoot does not end with slash)
@@ -359,7 +367,7 @@ let DbusObject = {
                 const [success, metadata] = GLib.file_get_contents(metadataFile);
                 uuid = JSON.parse(metadata.toString()).uuid;
                 if (uuid === undefined) {
-                    return empty;
+                    return null;
                 }
             }
         }
