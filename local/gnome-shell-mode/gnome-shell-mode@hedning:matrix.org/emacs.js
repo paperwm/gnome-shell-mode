@@ -141,6 +141,10 @@ function replaceAll(lines, regex, replacement) {
     })
 }
 
+/**
+ * Go through the ast, building replacements for top level declarations.
+ * For example `let foo = bar` gets translated to `<{prefix}>foo=bar`.
+ */
 function parseAndReplace(code, prefix) {
     // Let line 0 be the start so the line numbers are aligned with lines indexing
     let ast = Reflect.parse(code, {line: 0});
@@ -207,6 +211,9 @@ function parseAndReplace(code, prefix) {
     return newLines.join('\n');
 }
 
+/**
+ * Retrieve a span from lines using loc.start: {line: .., column: ..} syntax
+ */
 function span(lines, loc) {
     let start = loc.start;
     let end = loc.end;
@@ -220,6 +227,7 @@ function span(lines, loc) {
     return slice.join('\n');
 }
 
+// Rebuild a pattern, prefixing when appropriate.
 function pattern(lines, pattern, prefix) {
     if (!pattern)
         return '';
