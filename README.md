@@ -78,7 +78,7 @@ let module = Extension.imports.path.to.current.file;
 
 Having the module object we can simply use ``eval(`with(module) { ${code} }`)`` so re-evaluated code will have the correct closure.
 
-Reassignment relies on SpiderMonkey's built in parser. We traverse the top level statements, replacing an variable or function declarations. So eg. `function name () {}` gets translated to `module.name = function () {}` and `var foo = 'bar';` to `module.foo = 'bar';`. Having a proper parse tree means we can handle complex assignments with descructuring too (eg. 'let [foo, bar] = ...').
+Reassignment relies on SpiderMonkey's built in parser. We traverse the top level statements, replacing all variable and function declarations. So eg. `function name () {}` gets translated to `module.name = function () {}` and `var foo = 'bar';` to `module.foo = 'bar';`. Having a proper parse tree means we can handle complex assignments with descructuring too (eg. 'let [foo, bar] = ...').
 
 ## Caveats
 
