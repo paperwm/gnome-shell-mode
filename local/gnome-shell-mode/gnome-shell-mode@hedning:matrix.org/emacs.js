@@ -158,10 +158,16 @@ function parseAndReplace(code, prefix) {
 
                 if (declaration.init) {
                     // init.loc.start is often bonkers so we need to work around that
-                    let start = {line: declaration.loc.start.line,
-                                 column: declaration.loc.start.column};
-                    // Look for the first `=` we can find starting at declaration.loc.start
-                    // This assumes that there can be no `=` in patterns, which I think is correct
+                    // In addition id.loc.end is goes to the end of the
+                    // statement if it's an Identfier
+                    let start;
+                    if (declaration.id.type === 'Identifier') {
+                        start = Object.assign({}, declaration.loc.start);
+                    } else {
+                        start = Object.assign({}, declaration.id.loc.end);
+                    }
+                    // Look for the first `=` we can find starting at a position
+                    // where we know the next `=` is the init equal sign
                     let line = lines[start.line];
                     while (line.indexOf('=', start.column) === -1) {
                         start.column = 0;
