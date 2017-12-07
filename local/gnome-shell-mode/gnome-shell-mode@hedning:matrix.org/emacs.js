@@ -214,6 +214,8 @@ function span(lines, loc) {
 
 function pattern(lines, pattern, prefix) {
     switch (pattern.type) {
+    case 'Identifier':
+        return prefix + pattern.name;
     case 'ArrayPattern':
         return arrayPattern(lines, pattern, prefix);
     case 'ObjectPattern':
@@ -238,8 +240,15 @@ function arrayPattern(lines, pattern, prefix) {
     return replacement;
 }
 
-function objectPattern(lines, pattern, prefix) {
-    return span(lines, pattern.loc);
+function objectPattern(lines, objpattern, prefix) {
+    let replacement = '{';
+    for (let property of objpattern.properties) {
+        replacement += property.key.name + ':';
+        replacement += pattern(lines, property.value, prefix);
+        replacement += ',';
+    }
+    replacement = replacement.replace(/,$/, '}');
+    return replacement;
 }
 
 var parsedCodes = [];
