@@ -151,11 +151,7 @@ function parseAndReplace(code, prefix) {
         if (statement.type === 'VariableDeclaration') {
             let replacement = '';
             for (let declaration of statement.declarations) {
-                if (declaration.id.type == "Identifier") {
-                    replacement += prefix + declaration.id.name;
-                } else {
-                    replacement += pattern(lines, declaration.id, prefix);
-                }
+                replacement += pattern(lines, declaration.id, prefix);
 
                 if (declaration.init) {
                     // init.loc.start is often bonkers so we need to work around that
