@@ -217,6 +217,23 @@ let DbusObject = {
             print(`Couldn't load module, will evaluate without: ${e.message}`)
         }
 
+        let parsedcode;
+        try {
+            parsedcode = parseAndReplace(code, 'emacs.module.');
+        } catch(e) {
+            print('Parsing broke down: ' + e.message + e.lineNumber);
+        }
+
+        parsedCodes.push(parsedcode);
+        codes.push(code);
+        print(parsedcode.replace(/\n/g, '\t'));
+
+        try {
+            (0, eval)(`with(emacs.module){${parsedcode}}`);
+        } catch(e) {
+            print('eval didnt work', e.message)
+        }
+
         if (Object.keys(emacs.module).length > 0) {
             // We're in a module and we can replace `var` with
             // `emacs.module.` so that re-assignment works
