@@ -223,17 +223,10 @@ function pattern(lines, pattern, prefix) {
     }
 }
 
-// var pattern = declaration.id
-// var element = pattern.elements[0]
-function arrayPattern(lines, pattern, prefix) {
+function arrayPattern(lines, arraypattern, prefix) {
     let replacement = '[';
-    for (let element of pattern.elements) {
-        if (element.type === "Identifier") {
-            replacement += prefix + element.name;
-        } else {
-            replacement += pattern(lines, pattern, prefix);
-        }
-
+    for (let element of arraypattern.elements) {
+        replacement += pattern(lines, element, prefix);
         replacement += ',';
     }
     replacement = replacement.replace(/,$/, ']');
