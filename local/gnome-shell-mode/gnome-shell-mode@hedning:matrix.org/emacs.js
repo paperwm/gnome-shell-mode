@@ -161,7 +161,10 @@ function parseAndReplace(code, prefix) {
                 }
 
                 if (declaration.init) {
-                    replacement += '=' + span(lines, declaration.init.loc);
+                    let initSpan = span(lines, declaration.init.loc);
+                    // Make sure that init doesn't include `=`
+                    initSpan = initSpan.replace(/^=/, '');
+                    replacement += '=' + initSpan;
                 } else {
                     // Handle cases like 'let foo'
                     replacement += '= undefined';
