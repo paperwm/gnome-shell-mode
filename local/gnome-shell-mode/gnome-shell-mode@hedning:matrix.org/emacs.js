@@ -153,11 +153,8 @@ function parseAndReplace(code, prefix) {
             for (let declaration of statement.declarations) {
                 if (declaration.id.type == "Identifier") {
                     replacement += prefix + declaration.id.name;
-                } else if (declaration.id.type === 'ObjectPattern') {
-                    // Placeholder for proper handling of destructuring
-                    replacement += statement.kind + ' ' + span(declaration.id.loc);
-                } else if (declaration.id.type === 'ArrayPattern') {
-                    replacement += statement.kind + ' ' + span(declaration.id.loc);
+                } else {
+                    replacement += pattern(lines, declaration.id, prefix);
                 }
 
                 if (declaration.init) {
@@ -213,6 +210,36 @@ function span(lines, loc) {
         slice[slice.length-1] = slice[slice.length-1].substring(0, end.column);
     }
     return slice.join('\n');
+}
+
+function pattern(lines, pattern, prefix) {
+    switch (pattern.type) {
+    case 'ArrayPattern':
+        return arrayPattern(lines, pattern, prefix);
+    case 'ObjectPattern':
+        return objectPattern(lines, pattern, prefix);
+    }
+}
+
+// var pattern = declaration.id
+// var element = pattern.elements[0]
+function arrayPattern(lines, pattern, prefix) {
+    let replacement = '[';
+    for (let element of pattern.elements) {
+        if (element.type === "Identifier") {
+            replacement += prefix + element.name;
+        } else {
+            replacement += pattern(lines, pattern, prefix);
+        }
+
+        replacement += ',';
+    }
+    replacement = replacement.replace(/,$/, ']');
+    return replacement;
+}
+
+function objectPattern(lines, pattern, prefix) {
+    return span(lines, pattern.loc);
 }
 
 var parsedCodes = [];
