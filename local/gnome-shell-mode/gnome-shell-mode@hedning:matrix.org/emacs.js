@@ -221,6 +221,8 @@ function span(lines, loc) {
 }
 
 function pattern(lines, pattern, prefix) {
+    if (!pattern)
+        return '';
     switch (pattern.type) {
     case 'Identifier':
         return prefix + pattern.name;
@@ -228,6 +230,8 @@ function pattern(lines, pattern, prefix) {
         return arrayPattern(lines, pattern, prefix);
     case 'ObjectPattern':
         return objectPattern(lines, pattern, prefix);
+    default:
+        return span(lines, pattern.loc);
     }
 }
 
