@@ -318,7 +318,11 @@ let DbusObject = {
         let result;
         let success = true;
         try {
-            [code, sourceMap] = parseAndReplace(code, 'emacs.module.');
+            try {
+                [code, sourceMap] = parseAndReplace(code, 'emacs.module.');
+            } catch(e) {
+                // Let eval take care of syntax errors too
+            }
             eval_result =  (0, eval)(`with(emacs.module){ ${code} }`);
             result = {
                 success: true,
