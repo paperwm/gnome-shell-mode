@@ -228,18 +228,21 @@ function span(lines, loc) {
 }
 
 // Rebuild a pattern, prefixing when appropriate.
-function pattern(lines, pattern, prefix) {
-    if (!pattern)
+function pattern(lines, ptrn, prefix) {
+    if (!ptrn)
         return '';
-    switch (pattern.type) {
+    switch (ptrn.type) {
     case 'Identifier':
-        return prefix + pattern.name;
+        return prefix + ptrn.name;
     case 'ArrayPattern':
-        return arrayPattern(lines, pattern, prefix);
+        return arrayPattern(lines, ptrn, prefix);
     case 'ObjectPattern':
-        return objectPattern(lines, pattern, prefix);
+        return objectPattern(lines, ptrn, prefix);
+    case 'AssignmentExpression':
+        return pattern(lines, ptrn.left, prefix) + ptrn.operator
+            + pattern(lines, ptrn.right, prefix);
     default:
-        return span(lines, pattern.loc);
+        return span(lines, ptrn.loc);
     }
 }
 
