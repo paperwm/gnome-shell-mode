@@ -349,10 +349,10 @@ let DbusObject = {
         } catch(e) {
             // Note: JSON.stringify(e) doesn't reliably include all fields
             if (sourceMap) {
-                // lineNumber should be zero indexed, but for some is too big
-                // No idea why we need `+ 2`, as we really should get back a
-                // zero indexed line
-                e.lineNumber = mapLine(sourceMap, e.lineNumber - 1) + 2;
+                // lineNumber is one indexed, and sourceMap expect zero indexing
+                // it also returns a zero indexed line, so we need to add 1.
+                e.lineNumber = mapLine(sourceMap, e.lineNumber - 1) + 1;
+                print(pp_object(sourceMap))
             }
             result = {
                 success: false,
