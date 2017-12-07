@@ -183,7 +183,7 @@ function parseAndReplace(code, prefix) {
                                         end: statement.loc.end});
             newLines.push(replacement);
         } else {
-            newLines.push(span(lines, statement.loc));
+            newLines.push(span(lines, statement.loc) + ';');
         }
     }
     return newLines.join('\n');
