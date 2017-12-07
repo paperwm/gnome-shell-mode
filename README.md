@@ -36,7 +36,7 @@ There's two non-standard keybindings:
 
 ## Gnome Shell extension support
 
-Auto-completion and evaluation happens in the file local scope when editing a loaded extension, but will of course fall back to the global scope.
+Auto-completion and evaluation happens in the file local scope when editing a loaded extension. When editing a file not part of an extension the system creates an ad-hoc scope for the file.
 
 A small example of how this works in practice. Lets say you have a successfully loaded extension in the directory `MyExtension/`and you have some silly functions in `MyExtension/functions.js`:
 
@@ -68,7 +68,7 @@ let module = Extension.imports.path.to.current.file;
 
 Having the module object we can simply use ``eval(`with(module) { ${code} }`)`` so re-evaluated code will have the correct closure.
 
-Reassignment is handled by translating eg. `function name () {}` to `module.name = function () {}` and `var foo = 'bar';` to `module.foo = 'bar';`. At the moment this is done by regular expressions looking for `function` and `var` at the start of lines, so code that isn't indented properly will not evaluate correctly.
+Reassignment relies on SpiderMonkey's built in parser. We traverse the top level statements, replacing an variable or function declarations. So eg. `function name () {}` gets translated to `module.name = function () {}` and `var foo = 'bar';` to `module.foo = 'bar';`. Having a proper parse tree means we can handle complex assignments with descructuring too (eg. 'let [foo, bar] = ...').
 
 ## Caveats
 
