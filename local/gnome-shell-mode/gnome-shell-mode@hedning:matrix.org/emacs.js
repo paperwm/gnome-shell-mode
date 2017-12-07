@@ -161,10 +161,20 @@ function parseAndReplace(code, prefix) {
                 }
 
                 if (declaration.init) {
-                    let initSpan = span(lines, declaration.init.loc);
-                    // Make sure that init doesn't include `=`
-                    initSpan = initSpan.replace(/^=/, '');
-                    replacement += '=' + initSpan;
+                    // init.loc.start is often bonkers so we need to work around that
+                    let start = {line: declaration.loc.start.line,
+                                 column: declaration.loc.start.column};
+                    // Look for the first `=` we can find starting at declaration.loc.start
+                    // This assumes that there can be no `=` in patterns, which I think is correct
+                    let line = lines[start.line];
+                    while (line.indexOf('=', start.column) === -1) {
+                        start.column = 0;
+                        start.line = start.line + 1;
+                        line = lines[start.line];
+                    }
+                    start.column = line.indexOf('=', start.column);
+
+                    replacement += span(lines, {start, end: declaration.init.loc.end});
                 } else {
                     // Handle cases like 'let foo'
                     replacement += '= undefined';
