@@ -152,59 +152,14 @@ function parseAndReplace(code, prefix) {
     let newLines = [];
     // Loop over all toplevel statements
     for (let statement of ast.body) {
-        if (statement.type === 'VariableDeclaration') {
-            let replacement = '';
-            for (let declaration of statement.declarations) {
-                if (declaration.id.type === 'ObjectPattern') {
-                    replacement += '(';
-                }
-                replacement += pattern(lines, declaration.id, prefix);
-
-                if (declaration.init) {
-                    // init.loc.start is often bonkers so we need to work around that
-                    // In addition id.loc.end is goes to the end of the
-                    // statement if it's an Identfier
-                    let start;
-                    if (declaration.id.type === 'Identifier') {
-                        start = Object.assign({}, declaration.loc.start);
-                    } else {
-                        start = Object.assign({}, declaration.id.loc.end);
-                    }
-                    // Look for the first `=` we can find starting at a position
-                    // where we know the next `=` is the init equal sign
-                    let line = lines[start.line];
-                    while (line.indexOf('=', start.column) === -1) {
-                        start.column = 0;
-                        start.line = start.line + 1;
-                        line = lines[start.line];
-                    }
-                    start.column = line.indexOf('=', start.column);
-
-                    replacement += span(lines, {start, end: declaration.init.loc.end});
-                } else {
-                    // Handle cases like 'let foo'
-                    replacement += '= undefined';
-                }
-                if (declaration.id.type === 'ObjectPattern') {
-                    replacement += ')';
-                }
-                replacement += ',';
-            }
-            replacement = replacement.replace(/,$/, ';');
-            newLines.push(replacement);
-        } else if (statement.type === 'FunctionDeclaration') {
-            let replacement = prefix + statement.id.name + ' = function ';
-            replacement += '(';
-            for (let param of statement.params) {
-                replacement += span(lines, param.loc) + ',';
-            }
-            replacement = replacement.replace(/,$/, '');
-            replacement += ')';
-            // For some reason the body.loc.end doesn't include } (but start includes {)
-            replacement += span(lines, {start: statement.body.loc.start,
-                                        end: statement.loc.end});
-            newLines.push(replacement);
-        } else {
+        switch (statement.type) {
+        case 'VariableDeclaration':
+            newLines.push(variableDeclaration(lines, statement, prefix));
+            break;
+        case 'FunctionDeclaration':
+            newLines.push(functionDeclaration(lines, statement, prefix));
+            break;
+        default:
             newLines.push(span(lines, statement.loc) + ';');
         }
     }
@@ -225,6 +180,62 @@ function span(lines, loc) {
         slice[slice.length-1] = slice[slice.length-1].substring(0, end.column);
     }
     return slice.join('\n');
+}
+
+function variableDeclaration (lines, statement, prefix) {
+    let replacement = '';
+    for (let declaration of statement.declarations) {
+        if (declaration.id.type === 'ObjectPattern') {
+            replacement += '(';
+        }
+        replacement += pattern(lines, declaration.id, prefix);
+
+        if (declaration.init) {
+            // init.loc.start is often bonkers so we need to work around that
+            // In addition id.loc.end is goes to the end of the
+            // statement if it's an Identfier
+            let start;
+            if (declaration.id.type === 'Identifier') {
+                start = Object.assign({}, declaration.loc.start);
+            } else {
+                start = Object.assign({}, declaration.id.loc.end);
+            }
+            // Look for the first `=` we can find starting at a position
+            // where we know the next `=` is the init equal sign
+            let line = lines[start.line];
+            while (line.indexOf('=', start.column) === -1) {
+                start.column = 0;
+                start.line = start.line + 1;
+                line = lines[start.line];
+            }
+            start.column = line.indexOf('=', start.column);
+
+            replacement += span(lines, {start, end: declaration.init.loc.end});
+        } else {
+            // Handle cases like 'let foo'
+            replacement += '= undefined';
+        }
+        if (declaration.id.type === 'ObjectPattern') {
+            replacement += ')';
+        }
+        replacement += ',';
+    }
+    replacement = replacement.replace(/,$/, ';');
+    return replacement;
+}
+
+function functionDeclaration (lines, statement, prefix) {
+    let replacement = prefix + statement.id.name + ' = function ';
+    replacement += '(';
+    for (let param of statement.params) {
+        replacement += span(lines, param.loc) + ',';
+    }
+    replacement = replacement.replace(/,$/, '');
+    replacement += ')';
+    // For some reason the body.loc.end doesn't include } (but start includes {)
+    replacement += span(lines, {start: statement.body.loc.start,
+                                end: statement.loc.end});
+    return replacement;
 }
 
 // Rebuild a pattern, prefixing when appropriate.
