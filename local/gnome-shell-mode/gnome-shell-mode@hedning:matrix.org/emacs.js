@@ -148,8 +148,14 @@ function parseAndReplace(code, prefix) {
             // location information, so use the start of the next statement
             // instead as the end of the span.
             let nextStmt = ast.body[i+1];
-            newStatement = span(lines, {start: statement.loc.start,
-                                        end: nextStmt.loc.start}) + ';';
+            let end;
+            if (nextStmt) {
+                end = nextStmt.loc.start;
+            } else {
+                end = { line: lines.length,
+                        column: lines[lines.length-1].length};
+            }
+            newStatement = span(lines, {start: statement.loc.start, end}) + ';';
         }
 
         sourceMap.push(
