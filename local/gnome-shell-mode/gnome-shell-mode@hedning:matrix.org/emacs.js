@@ -474,19 +474,27 @@ function completion_candidates(text) {
 
     try {
         let obj = eval(path);
-        if (obj && typeof(obj) === "object") {
+        let type = typeof(obj);
+        if (obj && type === "object") {
             // NB: emacs.list_properties.call(x) crashes gnome-shell when x is a
             //     (non-empty) string or number
 
             emacs.list_properties.call(obj)
-            // list_properties gives names with "-" not "_"
+                // list_properties gives names with "-" not "_"
                 .forEach((x) => { completions.push(x.name.replace(/-/g, "_")) });
 
-            if (obj.prototype) {
-                let [pCompletions, _] = JsParse.getCompletions(text + ".prototype", commandHeader, AUTO_COMPLETE_GLOBAL_KEYWORDS)
-                pCompletions.forEach((x) => { completions.push(x)});
-            }
         }
+
+        if (obj && (type === 'string' || type === 'number' || type === 'symbol')) {
+            completions = completions
+                .concat(Object.getOwnPropertyNames(obj.constructor.prototype));
+        }
+
+        if (obj && type === 'function') {
+            completions = completions
+                .concat(Object.getOwnPropertyNames(obj.prototype));
+        }
+
     } catch(e) {};
 
     return completions.filter((x) => {return x.startsWith(attrHead); });
