@@ -112,26 +112,6 @@ function findExtensionRoot(pathString) {
     return [null, null];
 }
 
-const EvalIface =
-'\
-<node> \
-<interface name="gnome.shell.mode"> \
-<method name="Eval"> \
-    <arg type="s" direction="in" name="script" /> \
-    <arg type="s" direction="in" name="path" /> \
-    <arg type="b" direction="out" name="success" /> \
-    <arg type="s" direction="out" name="result" /> \
-</method> \
-<method name="Reload"> \
-    <arg type="s" direction="in" name="code" /> \
-    <arg type="s" direction="in" name="path" /> \
-    <arg type="b" direction="out" name="success" /> \
-    <arg type="s" direction="out" name="result" /> \
-</method> \
-</interface> \
-</node> \
-';
-
 /**
  * Desctructively apply lines[i].replace(regex, replacement)
  */
@@ -296,157 +276,155 @@ function mapLine(sourceMap, line) {
 }
 
 let fileScopes = {};
-let DbusObject = {
-    Eval: function (code, path) {
+function Eval(code, path) {
+    try {
+        // (We try in case the module has syntax errors)
+        emacs.module = findModule(path);
+    } catch(e) {
+        emacs.module = null;
+        print(`Couldn't load module, fall back to default scope: ${e.message}`)
+    }
+
+    // Create a new scope, indexed by the path
+    if (emacs.module === null) {
+        if (!fileScopes[path])
+            fileScopes[path] = {};
+        emacs.module = fileScopes[path];
+    }
+
+    let sourceMap;
+    let eval_result;
+    let result;
+    let success = true;
+    try {
         try {
-            // (We try in case the module has syntax errors)
-            emacs.module = this.findModule(path);
+            [code, sourceMap] = parseAndReplace(code, 'emacs.module.');
         } catch(e) {
-            emacs.module = null;
-            print(`Couldn't load module, fall back to default scope: ${e.message}`)
+            // Let eval take care of syntax errors too
         }
+        eval_result =  (0, eval)(`with(emacs.module){ ${code} }`);
+        result = {
+            success: true,
+        };
 
-        // Create a new scope, indexed by the path
-        if (emacs.module === null) {
-            if (!fileScopes[path])
-                fileScopes[path] = {};
-            emacs.module = fileScopes[path];
-        }
-
-        let sourceMap;
-        let eval_result;
-        let result;
-        let success = true;
         try {
-            try {
-                [code, sourceMap] = parseAndReplace(code, 'emacs.module.');
-            } catch(e) {
-                // Let eval take care of syntax errors too
-            }
-            eval_result =  (0, eval)(`with(emacs.module){ ${code} }`);
-            result = {
-                success: true,
-            };
+            result.value = pp_object(eval_result)
 
-            try {
-                result.value = pp_object(eval_result)
-
-                if (eval_result && eval_result.constructor === Array) {
-                    // Also return the actual object. Currently used by the
-                    // completion code to avoid parsing a pretty printed array.
-                    // When/if we define our own dbus service we can have a separate
-                    // dbus method for completion and maybe remove this line.
-                    if (eval_result.every(x => typeof(x) === "string")) {
-                        // Other types can cause problems. eg. dbus fails if a
-                        // object is cyclic.
-                        result.raw_value = eval_result;
-                    }
+            if (eval_result && eval_result.constructor === Array) {
+                // Also return the actual object. Currently used by the
+                // completion code to avoid parsing a pretty printed array.
+                // When/if we define our own dbus service we can have a separate
+                // dbus method for completion and maybe remove this line.
+                if (eval_result.every(x => typeof(x) === "string")) {
+                    // Other types can cause problems. eg. dbus fails if a
+                    // object is cyclic.
+                    result.raw_value = eval_result;
                 }
-            } catch(e) {
-                result.value = "Error during pretty printing: " + e.message;
             }
-
         } catch(e) {
-            // Note: JSON.stringify(e) doesn't reliably include all fields
-            if (sourceMap) {
-                // lineNumber is one indexed, and sourceMap expect zero indexing
-                // it also returns a zero indexed line, so we need to add 1.
-                e.lineNumber = mapLine(sourceMap, e.lineNumber - 1) + 1;
-                print(pp_object(sourceMap))
-            }
-            result = {
-                success: false,
-                value: e.message,
-                stack: e.stack,
-                lineNumber: e.lineNumber - emacs.eval_line_offset,
-                columnNumber: e.columnNumber, 
-                // e.constructor
-                file: e.file
-            }
-            emacs.lasterr = e; // for debugging
-
-            success = false;
-        }
-        return [success, JSON.stringify(result)];
-    },
-
-    /**
-     * Reload the the path by disabling the extension, re-evaluate the code in
-     * the path and enable the extension again.
-     */
-    Reload: function(code, path) {
-        // Make sure that we're in an ext
-        let [type, root] = findExtensionRoot(path);
-
-        let uuid;
-        if (type === 'extension') {
-            let metadataFile = `${root}/metadata.json`;
-            if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
-                const [success, metadata] = GLib.file_get_contents(metadataFile);
-                uuid = JSON.parse(metadata.toString()).uuid;
-                if (uuid === undefined) {
-                    return [false, 'Extension is missing the uuid'];
-                }
-            }
-        } else {
-            return [false, 'Not a valid extension'];
+            result.value = "Error during pretty printing: " + e.message;
         }
 
-        let extension = imports.misc.extensionUtils.extensions[uuid];
-        let modules = extension.imports.extension.modules;
-        // Disable the extension
-        extension.imports.extension.disable();
-
-        // Reload the modules
-        const [evalSuccess, result] = this.Eval(code, path);
-        // Enable the extension again
-        extension.imports.extension.enable();
-        return [evalSuccess, result];
-    },
-
-    findModule: function(moduleFilePath) {
-        let [type, projectRoot] = findExtensionRoot(moduleFilePath);
-        let empty = {};
-        if (projectRoot === null || type === null) {
-            return null;
+    } catch(e) {
+        // Note: JSON.stringify(e) doesn't reliably include all fields
+        if (sourceMap) {
+            // lineNumber is one indexed, and sourceMap expect zero indexing
+            // it also returns a zero indexed line, so we need to add 1.
+            e.lineNumber = mapLine(sourceMap, e.lineNumber - 1) + 1;
         }
+        print(e.lineNumber);
+        result = {
+            success: false,
+            value: e.message,
+            stack: e.stack,
+            lineNumber: e.lineNumber - emacs.eval_line_offset,
+            columnNumber: e.columnNumber, 
+            // e.constructor
+            file: e.file
+        }
+        emacs.lasterr = e; // for debugging
 
-        // (projectRoot does not end with slash)
-        let relPath = moduleFilePath.slice(projectRoot.length+1);
+        success = false;
+    }
+    return [success, JSON.stringify(result)];
+}
 
-        let uuid;
-        if (type === 'extension') {
-            let metadataFile = `${projectRoot}/metadata.json`;
-            if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
-                const [success, metadata] = GLib.file_get_contents(metadataFile);
-                uuid = JSON.parse(metadata.toString()).uuid;
-                if (uuid === undefined) {
-                    return null;
-                }
+/**
+ * Reload the the path by disabling the extension, re-evaluate the code in
+ * the path and enable the extension again.
+ */
+function Reload(code, path) {
+    // Make sure that we're in an ext
+    let [type, root] = findExtensionRoot(path);
+
+    let uuid;
+    if (type === 'extension') {
+        let metadataFile = `${root}/metadata.json`;
+        if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
+            const [success, metadata] = GLib.file_get_contents(metadataFile);
+            uuid = JSON.parse(metadata.toString()).uuid;
+            if (uuid === undefined) {
+                return [false, 'Extension is missing the uuid'];
             }
         }
+    } else {
+        return [false, 'Not a valid extension'];
+    }
 
-        // Find the module object we're in
-        if (relPath.endsWith('.js')) {
-            relPath = relPath.substring(0, relPath.length - 3);
-            let moduleImports;
-            if (type === 'extension') {
-                moduleImports =
-                    imports.misc.extensionUtils.extensions[uuid].imports;
-            } else if (type === 'shell') {
-                moduleImports = imports;
+    let extension = imports.misc.extensionUtils.extensions[uuid];
+    let modules = extension.imports.extension.modules;
+    // Disable the extension
+    extension.imports.extension.disable();
+
+    // Reload the modules
+    const [evalSuccess, result] = Eval(code, path);
+    // Enable the extension again
+    extension.imports.extension.enable();
+    return [evalSuccess, result];
+}
+
+function findModule(moduleFilePath) {
+    let [type, projectRoot] = findExtensionRoot(moduleFilePath);
+    let empty = {};
+    if (projectRoot === null || type === null) {
+        return null;
+    }
+
+    // (projectRoot does not end with slash)
+    let relPath = moduleFilePath.slice(projectRoot.length+1);
+
+    let uuid;
+    if (type === 'extension') {
+        let metadataFile = `${projectRoot}/metadata.json`;
+        if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
+            const [success, metadata] = GLib.file_get_contents(metadataFile);
+            uuid = JSON.parse(metadata.toString()).uuid;
+            if (uuid === undefined) {
+                return null;
             }
-            return relPath.split('/').reduce((module, name) => {
-                if (module[name]) {
-                    return module[name];
-                }
-                return empty;
-            },  moduleImports);
-        } else {
-            return null;
         }
     }
-};
+
+    // Find the module object we're in
+    if (relPath.endsWith('.js')) {
+        relPath = relPath.substring(0, relPath.length - 3);
+        let moduleImports;
+        if (type === 'extension') {
+            moduleImports =
+                imports.misc.extensionUtils.extensions[uuid].imports;
+        } else if (type === 'shell') {
+            moduleImports = imports;
+        }
+        return relPath.split('/').reduce((module, name) => {
+            if (module[name]) {
+                return module[name];
+            }
+            return empty;
+        },  moduleImports);
+    } else {
+        return null;
+    }
+}
 
 const JsParse = imports.misc.jsParse;
 

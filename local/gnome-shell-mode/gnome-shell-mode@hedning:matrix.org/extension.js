@@ -22,10 +22,41 @@ function init() {
     emacs.completion_candidates = Emacs.completion_candidates;
 }
 
+const EvalIface =
+      '\
+<node> \
+<interface name="gnome.shell.mode"> \
+<method name="Eval"> \
+    <arg type="s" direction="in" name="script" /> \
+    <arg type="s" direction="in" name="path" /> \
+    <arg type="b" direction="out" name="success" /> \
+    <arg type="s" direction="out" name="result" /> \
+</method> \
+<method name="Reload"> \
+    <arg type="s" direction="in" name="code" /> \
+    <arg type="s" direction="in" name="path" /> \
+    <arg type="b" direction="out" name="success" /> \
+    <arg type="s" direction="out" name="result" /> \
+</method> \
+</interface> \
+</node> \
+';
+
+
 let dbusImpl;
 function enable() {
     print('enable gnome-shell-mode server')
-    dbusImpl = Gio.DBusExportedObject.wrapJSObject(Emacs.EvalIface, Emacs.DbusObject);
+
+    let DbusObject = {
+        Eval: function (code, path) {
+            return Emacs.Eval(code, path);
+        },
+        Reload: function (code, path) {
+            return Emacs.Reload(code, path);
+        }
+    };
+
+    dbusImpl = Gio.DBusExportedObject.wrapJSObject(EvalIface, DbusObject);
     dbusImpl.export(Gio.DBus.session, '/gnome/shell/mode');
 }
 function disable() {
