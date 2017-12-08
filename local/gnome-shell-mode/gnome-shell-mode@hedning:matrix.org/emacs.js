@@ -133,7 +133,8 @@ function parseAndReplace(code, prefix) {
     let sourceMap = [];
     let linebreaks = 0;
     // Loop over all toplevel statements
-    for (let statement of ast.body) {
+    for (let i in ast.body) {
+        let statement = ast.body[i];
         let newStatement;
         switch (statement.type) {
         case 'VariableDeclaration':
@@ -143,7 +144,12 @@ function parseAndReplace(code, prefix) {
             newStatement = functionDeclaration(lines, statement, prefix);
             break;
         default:
-            newStatement = span(lines, statement.loc) + ';';
+            // BlockStatements doesn't include closing curly brackets in their
+            // location information, so use the start of the next statement
+            // instead as the end of the span.
+            let nextStmt = ast.body[i+1];
+            newStatement = span(lines, {start: statement.loc.start,
+                                        end: nextStmt.loc.start}) + ';';
         }
 
         sourceMap.push(
