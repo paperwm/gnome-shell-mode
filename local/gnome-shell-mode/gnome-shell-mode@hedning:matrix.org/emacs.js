@@ -461,9 +461,8 @@ function completion_candidates(text) {
         return empty;
     }, emacs.module);
 
-    for (let varname in moduleObject) {
-        completions.push(varname);
-    }
+    completions = completions
+        .concat(Object.getOwnPropertyNames(moduleObject));
 
     let path;
     if (moduleObject === emacs.module || moduleObject === empty) {
