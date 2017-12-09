@@ -171,6 +171,19 @@ function parseAndReplace(code, prefix) {
             let end;
             if (nextStmt) {
                 end = nextStmt.loc.start;
+                // Function declarations reports start as the start of the
+                // function name
+                if (nextStmt.type == 'FunctionDeclaration') {
+                    end = statement.loc.end;
+                    let line = lines[end.line];
+                    while (line.indexOf('function', end.column) === -1) {
+                        end.column = 0;
+                        end.line = end.line + 1;
+                        line = lines[end.line];
+                    }
+                    end.column = line.indexOf('function', end.column);
+                    end.column--;
+                }
             } else {
                 end = { line: lines.length,
                         column: lines[lines.length-1].length};
