@@ -219,9 +219,7 @@ function span(lines, loc) {
 function variableDeclaration (lines, statement, prefix) {
     let replacement = '';
     for (let declaration of statement.declarations) {
-        if (declaration.id.type === 'ObjectPattern') {
-            replacement += '(';
-        }
+        replacement += '(';
         replacement += pattern(lines, declaration.id, prefix);
 
         if (declaration.init) {
@@ -249,9 +247,7 @@ function variableDeclaration (lines, statement, prefix) {
             // Handle cases like 'let foo'
             replacement += '= undefined';
         }
-        if (declaration.id.type === 'ObjectPattern') {
-            replacement += ')';
-        }
+        replacement += ')';
         replacement += ',';
     }
     replacement = replacement.replace(/,$/, ';');
