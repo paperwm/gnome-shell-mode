@@ -268,7 +268,7 @@ function functionDeclaration (lines, statement, prefix) {
     replacement += ')';
     // For some reason the body.loc.end doesn't include } (but start includes {)
     replacement += span(lines, {start: statement.body.loc.start,
-                                end: statement.loc.end});
+                                end: statement.loc.end}) + ';';
     return replacement;
 }
 
