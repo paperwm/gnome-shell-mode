@@ -50,8 +50,12 @@ function pp_helper(key, obj) {
     } else if (obj === null) {
         pretty = "null";
     } else if (type === "object") {
-        let constructor_name = obj.constructor.name;
-        let custom_pp_fn = pretty_printers[constructor_name];
+        let custom_pp_fn;
+
+        if (hasConstuctor(obj)) {
+            custom_pp_fn = pretty_printers[obj.constructor.name];
+        }
+
         if (custom_pp_fn) {
             pretty = custom_pp_fn(obj, key);
         } else {
@@ -72,9 +76,24 @@ function pp_helper(key, obj) {
     return pretty;
 }
 
+function hasConstuctor(obj, exactConstructor) {
+    // gjs "imports objects" fails when evaluation .constructor so we need this
+    // special check
+    try {
+        if(!exactConstructor) {
+            // Check if there is _any_ constructor
+            return !!obj.constructor
+        } else {
+            return exactConstructor === obj.constructor;
+        }
+    } catch(e) {
+        return false;
+    }
+}
+
 function pp_object(obj) {
     if (obj !== null && typeof(obj) === "object"
-        && (obj.constructor === Object || obj.constructor === Array))
+        && (hasConstuctor(obj, Object) || hasConstuctor(obj, Array)))
     {
         // Use JSON.stringify as a poor man's pretty printer for simple
         // composite objects
@@ -322,7 +341,7 @@ function Eval(code, path) {
         try {
             result.value = pp_object(eval_result)
 
-            if (eval_result && eval_result.constructor === Array) {
+            if (eval_result && hasConstuctor(eval_result, Array)) {
                 // Also return the actual object. Currently used by the
                 // completion code to avoid parsing a pretty printed array.
                 // When/if we define our own dbus service we can have a separate
