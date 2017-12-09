@@ -40,40 +40,90 @@ pretty_printers["Clutter_ActorBox"] = function(box, key) {
 
 pretty_printers["Meta_Rectangle"] = function(box, key) {
     return `Meta_Rectangle ${pp_rect([box.x, box.y, box.width, box.height])}`;
+
 }
 
-function pp_helper(key, obj) {
-    let type = typeof(obj);
-    let pretty;
-    if (type === "undefined") {
-        pretty = "undefined";
-    } else if (obj === null) {
-        pretty = "null";
-    } else if (type === "object") {
-        let custom_pp_fn;
-
-        if (hasConstuctor(obj)) {
-            custom_pp_fn = pretty_printers[obj.constructor.name];
-        }
-
-        if (custom_pp_fn) {
-            pretty = custom_pp_fn(obj, key);
-        } else {
-            pretty = obj.toString();
-        }
-    } else if (type === "function") {
-        // Just print the whole definition
-        pretty = obj.toString();
-    } else if (type === "string") {
-        // Could special case string so we're sure it's easier to
-        // differentiate between a string and a custom string representation
-        // of an object. Eg. by surrounding it by single quotes.
-        pretty = obj
-    } else {
-        // Let JSON handle it (Numbers, etc.)
-        pretty = obj;
+function ppObject(obj, key) {
+    let customPPFn;
+    if (hasConstuctor(obj)) {
+        customPPFn = pretty_printers[obj.constructor.name];
     }
-    return pretty;
+    if (customPPFn) {
+        return customPPFn(obj, key);
+    } else {
+        return obj.toString();
+    }
+}
+
+
+function pp_helper(root) {
+    let seen = new Map();
+    seen.set(root, "<Self>")
+    function cycleDetectingPP(key, obj) {
+
+        if(key === "") {
+            // obj is the "root object":
+            //   JSON.stringify(X, helper)
+            //   When key is "", obj is X
+            // Always recurse in this case.
+            return obj
+        }
+
+        let type = typeof(obj);
+        let pretty;
+        if (type === "undefined") {
+            pretty = "undefined";
+        } else if (obj === null) {
+            pretty = "null";
+        } else if (type === "object") {
+            let prettyMaybe = ppObject(obj);
+
+            if(typeof(prettyMaybe) === 'object') {
+                // We allow pretty printers to return a object instead of a
+                // string to pretty print recursively.
+                // Normally its only the plain object printer that rely in this.
+                if (seen.get(obj)) {
+                    pretty = seen.get(obj);
+                } else {
+                    seen.set(prettyMaybe, prettyMaybe.toString());
+                    // In the rare case prettyMaybe !== obj :
+                    seen.set(obj, prettyMaybe.toString());
+
+                    // Recursively pretty print.
+                    // Use a separate stringify call (as opposed to simply
+                    // returning the object) so we can cache the result and use
+                    // it if we see the object again.
+                    //
+                    // Note that we can't return the _string_ from the recursive
+                    // stringify call as the parent stringify would escape it.
+                    // By convert back to a plain object we get the wanted
+                    // effect!
+                    let prettyTree =
+                        eval(`(${JSON.stringify(prettyMaybe, cycleDetectingPP)})`);
+                    seen.set(obj, prettyTree)
+
+                    pretty = prettyTree;
+                }
+            } else {
+                pretty = prettyMaybe;
+            }
+        } else if (type === "function") {
+            // Just print the whole definition
+            pretty = obj.toString();
+        } else if (type === "string") {
+            // Could special case string so we're sure it's easier to
+            // differentiate between a string and a custom string representation
+            // of an object. Eg. by surrounding it by single quotes.
+            pretty = obj
+        } else {
+            // Let JSON handle it (Numbers, etc.)
+            pretty = obj;
+        }
+
+        return pretty;
+    }
+
+    return cycleDetectingPP;
 }
 
 function hasConstuctor(obj, exactConstructor) {
@@ -81,7 +131,7 @@ function hasConstuctor(obj, exactConstructor) {
     // special check
     try {
         if(!exactConstructor) {
-            // Check if there is _any_ constructor
+            // Check if there is _any_ constructor at all
             return !!obj.constructor
         } else {
             return exactConstructor === obj.constructor;
@@ -91,19 +141,19 @@ function hasConstuctor(obj, exactConstructor) {
     }
 }
 
-function pp_object(obj) {
+function prettyPrint(obj) {
     if (obj !== null && typeof(obj) === "object"
         && (hasConstuctor(obj, Object) || hasConstuctor(obj, Array)))
     {
         // Use JSON.stringify as a poor man's pretty printer for simple
         // composite objects
-        return JSON.stringify(obj, pp_helper);
+        return JSON.stringify(obj, pp_helper(obj));
     } else if(typeof(obj) === "string") {
         // A pretty string have quotes around it to not conceal it's true nature
         return JSON.stringify(obj);
     } else {
         // Top level simple or complex constructor
-        let pretty = pp_helper(undefined, obj);
+        let pretty = pp_helper(obj)(undefined, obj);
         if(typeof(pretty) !== "string") {
             // Emacs expects a string, even for numbers
             pretty = JSON.stringify(pretty);
@@ -349,7 +399,7 @@ function Eval(code, path) {
         };
 
         try {
-            result.value = pp_object(eval_result)
+            result.value = prettyPrint(eval_result)
 
             if (eval_result && hasConstuctor(eval_result, Array)) {
                 // Also return the actual object. Currently used by the
