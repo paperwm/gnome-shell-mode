@@ -152,7 +152,8 @@ function parseAndReplace(code, prefix) {
     let sourceMap = [];
     let linebreaks = 0;
     // Loop over all toplevel statements
-    for (let i in ast.body) {
+    let length = ast.body.length;
+    for (let i = 0; i < length; i++) {
         let statement = ast.body[i];
         let newStatement;
         switch (statement.type) {
