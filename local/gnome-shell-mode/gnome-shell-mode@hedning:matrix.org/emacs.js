@@ -238,8 +238,10 @@ function parseAndReplace(code, prefix) {
                 end = { line: lines.length,
                         column: lines[lines.length-1].length};
             }
-            newStatement = span(lines, {start: statement.loc.start, end}) + ';';
+            newStatement = span(lines, {start: statement.loc.start, end});
         }
+        // Always add a semicolon to the built statement for safety
+        newStatement += ';';
 
         sourceMap.push(
             {source: statement.loc.start.line,
@@ -300,7 +302,7 @@ function variableDeclaration (lines, statement, prefix) {
         replacement += ')';
         replacement += ',';
     }
-    replacement = replacement.replace(/,$/, ';');
+    replacement = replacement.replace(/,$/, '');
     return replacement;
 }
 
@@ -314,7 +316,7 @@ function functionDeclaration (lines, statement, prefix) {
     replacement += ')';
     // For some reason the body.loc.end doesn't include } (but start includes {)
     replacement += span(lines, {start: statement.body.loc.start,
-                                end: statement.loc.end}) + ';';
+                                end: statement.loc.end});
     return replacement;
 }
 
