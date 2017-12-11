@@ -198,7 +198,7 @@ function parseAndReplace(code, prefix) {
     // Let line 0 be the start so the line numbers are aligned with lines indexing
     let ast = Reflect.parse(code, {line: 0});
     let lines = code.split('\n');
-    let newLines = [];
+    let statements = [];
     let sourceMap = [];
     let linebreaks = 0;
     // Loop over all toplevel statements
@@ -243,11 +243,11 @@ function parseAndReplace(code, prefix) {
 
         sourceMap.push(
             {source: statement.loc.start.line,
-             sink: newLines.length + linebreaks});
+             sink: statements.length + linebreaks});
         linebreaks += Math.max(0, newStatement.split('\n').length - 1);
-        newLines.push(newStatement);
+        statements.push(newStatement);
     }
-    return [newLines.join('\n'), sourceMap];
+    return [statements.join('\n'), sourceMap];
 }
 
 /**
