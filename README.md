@@ -46,7 +46,9 @@ There's basic support for documentation lookup using <kbd>, h h</kbd>. This will
 
 ### Gnome Shell extension support
 
-Auto-completion and evaluation happens in the file local scope when editing a loaded extension. When editing a file not part of an extension the system creates an ad-hoc scope for the file.
+Auto-completion and evaluation happens in the file local scope when editing a loaded extension, or a file in the Gnome Shell source tree. When editing a file not part of an extension the system creates an ad-hoc scope for the file.
+
+More specifically, if there's an `imports.some.path` object corresponding to the file being edited the scope of evaluation will be `imports.some.path` (or `someExtension.imports.some.path` in the case of extension code).
 
 A small example of how this works in practice. Lets say you have a successfully loaded extension in the directory `MyExtension/`and you have some silly functions in `MyExtension/functions.js`:
 
