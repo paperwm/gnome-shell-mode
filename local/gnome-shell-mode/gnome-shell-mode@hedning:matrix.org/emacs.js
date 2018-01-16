@@ -298,7 +298,7 @@ function variableDeclaration (lines, statement, prefix) {
             replacement += span(lines, {start, end: declaration.init.loc.end});
         } else {
             // Handle cases like 'let foo'
-            replacement += '= undefined';
+            replacement += `=  ${prefix}${declaration.id.name}`;
         }
         replacement += ')';
         replacement += ',';
