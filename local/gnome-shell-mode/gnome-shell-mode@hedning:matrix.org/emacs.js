@@ -512,7 +512,8 @@ function findModule(moduleFilePath) {
 const JsParse = imports.misc.jsParse;
 
 let _getAutoCompleteGlobalKeywords = () => {
-    const keywords = ['true', 'false', 'null', 'new', 'typeof', 'function', 'throw', 'catch', 'try'];
+    const keywords = ['true', 'false', 'null', 'new', 'typeof', 'function',
+                      'throw', 'catch', 'try', 'const', 'let', 'var'];
     // Don't add the private properties of window (i.e., ones starting with '_')
     const windowProperties = Object.getOwnPropertyNames(window).filter(function(a){ return a.charAt(0) != '_' });
 
