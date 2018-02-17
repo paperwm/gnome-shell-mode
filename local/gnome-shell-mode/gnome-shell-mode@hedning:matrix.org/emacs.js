@@ -570,7 +570,9 @@ function completion_candidates(text) {
                 .concat(Reflect.ownKeys(obj));
         }
 
-    } catch(e) {};
+    } catch(e) {
+        print(`Completion failed: ${e.message}`);
+    };
 
     return completions.filter((x) => {return x.startsWith(attrHead); });
 };
