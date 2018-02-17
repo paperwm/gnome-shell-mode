@@ -188,6 +188,13 @@
                     (buffer-string)
                     (or (buffer-file-name) "")))
 
+(defun gnome-shell--dbus-complete (context)
+  "Ask dbus to reload the extension."
+  (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
+                    "gnome.shell.mode" "Complete"
+                    context
+                    (or (buffer-file-name) "")))
+
 (defun gnome-shell-reload ()
   "Reload the extension currently being edited. The buffer will pulse green or
 red depending on the success of the reload."

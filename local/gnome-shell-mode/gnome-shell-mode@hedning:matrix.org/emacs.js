@@ -405,17 +405,6 @@ function Eval(code, path) {
         try {
             result.value = prettyPrint(eval_result)
 
-            if (eval_result && hasConstuctor(eval_result, Array)) {
-                // Also return the actual object. Currently used by the
-                // completion code to avoid parsing a pretty printed array.
-                // When/if we define our own dbus service we can have a separate
-                // dbus method for completion and maybe remove this line.
-                if (eval_result.every(x => typeof(x) === "string")) {
-                    // Other types can cause problems. eg. dbus fails if a
-                    // object is cyclic.
-                    result.raw_value = eval_result;
-                }
-            }
         } catch(e) {
             result.value = "Error during pretty printing: " + e.message;
         }
@@ -530,7 +519,8 @@ let _getAutoCompleteGlobalKeywords = () => {
     return keywords.concat(windowProperties);
 }
 
-function completion_candidates(text) {
+function completion_candidates(text, path) {
+    let scope = findScope(path);
     let AUTO_COMPLETE_GLOBAL_KEYWORDS = _getAutoCompleteGlobalKeywords();
     let [completions, attrHead] = JsParse.getCompletions(text, '', AUTO_COMPLETE_GLOBAL_KEYWORDS);
 
@@ -541,20 +531,20 @@ function completion_candidates(text) {
             return object[path];
         }
         return empty;
-    }, emacs.module);
+    }, scope);
 
     completions = completions
         .concat(Object.getOwnPropertyNames(moduleObject));
 
-    let path;
-    if (moduleObject === emacs.module || moduleObject === empty) {
-        path = text.substring(0, text.length - attrHead.length - 1);
+    let name;
+    if (moduleObject === scope || moduleObject === empty) {
+        name = text.substring(0, text.length - attrHead.length - 1);
     } else {
-        path = moduleObject;
+        name = moduleObject;
     }
 
     try {
-        let obj = eval(path);
+        let obj = eval(name);
         let type = typeof(obj);
         if (obj && type === "object") {
             // NB: emacs.list_properties.call(x) crashes gnome-shell when x is a
@@ -580,5 +570,5 @@ function completion_candidates(text) {
         print(`Completion failed: ${e.message}`);
     };
 
-    return completions.filter((x) => {return x.startsWith(attrHead); });
+    return JSON.stringify(completions.filter((x) => x.startsWith(attrHead)));
 };

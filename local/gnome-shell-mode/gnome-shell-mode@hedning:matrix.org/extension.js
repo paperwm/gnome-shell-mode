@@ -18,8 +18,6 @@ function init() {
     // changes to this code for now
     // in gnome-shell 3.24.3 eval lineNumber is correct!
     emacs.eval_line_offset = 0; 
-
-    emacs.completion_candidates = Emacs.completion_candidates;
 }
 
 const EvalIface =
@@ -38,6 +36,11 @@ const EvalIface =
     <arg type="b" direction="out" name="success" /> \
     <arg type="s" direction="out" name="result" /> \
 </method> \
+<method name="Complete"> \
+    <arg type="s" direction="in" name="code" /> \
+    <arg type="s" direction="in" name="path" /> \
+    <arg type="s" direction="out" name="result" /> \
+</method> \
 </interface> \
 </node> \
 ';
@@ -53,6 +56,9 @@ function enable() {
         },
         Reload: function (code, path) {
             return Emacs.Reload(code, path);
+        },
+        Complete: function (code, path) {
+            return Emacs.completion_candidates(code, path);
         }
     };
 
