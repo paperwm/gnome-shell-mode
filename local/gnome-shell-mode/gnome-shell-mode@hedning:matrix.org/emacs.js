@@ -421,7 +421,6 @@ function Eval(code, path) {
             // it also returns a zero indexed line, so we need to add 1.
             e.lineNumber = mapLine(sourceMap, e.lineNumber - 1) + 1;
         }
-        print(e.lineNumber);
         result = {
             success: false,
             value: e.message,
