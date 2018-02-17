@@ -242,7 +242,7 @@ function parseAndReplace(code, prefix) {
             newStatement = span(lines, {start: statement.loc.start, end});
         }
         // Always add a semicolon to the built statement for safety
-        newStatement += ';';
+        newStatement += ';\n';
 
         sourceMap.push(
             {source: statement.loc.start.line,
