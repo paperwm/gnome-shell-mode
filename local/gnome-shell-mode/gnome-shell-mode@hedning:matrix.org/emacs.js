@@ -562,12 +562,12 @@ function completion_candidates(text) {
 
         if (obj && (type === 'string' || type === 'number' || type === 'symbol')) {
             completions = completions
-                .concat(Object.getOwnPropertyNames(obj.constructor.prototype));
+                .concat(Reflect.ownKeys(obj.constructor.prototype));
         }
 
         if (obj && type === 'function') {
             completions = completions
-                .concat(Object.getOwnPropertyNames(obj.prototype));
+                .concat(Reflect.ownKeys(obj));
         }
 
     } catch(e) {};
