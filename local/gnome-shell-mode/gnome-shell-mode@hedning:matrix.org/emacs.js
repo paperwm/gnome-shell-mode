@@ -365,21 +365,27 @@ function mapLine(sourceMap, line) {
 }
 
 let fileScopes = {};
-function Eval(code, path) {
+function findScope(path) {
+    let scope;
     try {
         // (We try in case the module has syntax errors)
-        emacs.module = findModule(path);
+        scope = findModule(path);
     } catch(e) {
-        emacs.module = null;
+        scope = null;
         print(`Couldn't load module, fall back to default scope: ${e.message}`)
     }
 
     // Create a new scope, indexed by the path
-    if (emacs.module === null) {
+    if (scope === null) {
         if (!fileScopes[path])
             fileScopes[path] = {};
-        emacs.module = fileScopes[path];
+        scope = fileScopes[path];
     }
+    return scope;
+}
+
+function Eval(code, path) {
+    emacs.module = findScope(path);
 
     let sourceMap;
     let eval_result;
