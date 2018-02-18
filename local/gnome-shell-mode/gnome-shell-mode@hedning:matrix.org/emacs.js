@@ -537,39 +537,37 @@ function completion_candidates(text, path) {
     completions = completions
         .concat(Object.getOwnPropertyNames(moduleObject));
 
-    let name;
+    let obj;
     if (moduleObject === scope || moduleObject === empty) {
-        name = text.substring(0, text.length - attrHead.length - 1);
+        try {
+            let name = text.substring(0, text.length - attrHead.length - 1);
+            obj = (0, eval)(name);
+        } catch (e) {}
     } else {
-        name = moduleObject;
+        obj = moduleObject;
     }
 
-    try {
-        let obj = eval(name);
-        let type = typeof(obj);
-        if (obj && type === "object") {
-            // NB: emacs.list_properties.call(x) crashes gnome-shell when x is a
-            //     (non-empty) string or number
+    switch (typeof(obj)) {
+    case 'object':
+        // NB: emacs.list_properties.call(x) crashes gnome-shell when x is a
+        //     (non-empty) string or number
 
-            emacs.list_properties.call(obj)
-                // list_properties gives names with "-" not "_"
-                .forEach((x) => { completions.push(x.name.replace(/-/g, "_")) });
+        emacs.list_properties.call(obj)
+        // list_properties gives names with "-" not "_"
+            .forEach((x) => { completions.push(x.name.replace(/-/g, "_")) });
+        break;
+    case 'symbol':
+    case 'string':
+    case 'number':
+        completions = completions
+            .concat(Reflect.ownKeys(obj.constructor.prototype));
+        break;
+    case 'function':
+        completions = completions
+            .concat(Reflect.ownKeys(obj));
+        break;
+    }
 
-        }
-
-        if (obj && (type === 'string' || type === 'number' || type === 'symbol')) {
-            completions = completions
-                .concat(Reflect.ownKeys(obj.constructor.prototype));
-        }
-
-        if (obj && type === 'function') {
-            completions = completions
-                .concat(Reflect.ownKeys(obj));
-        }
-
-    } catch(e) {
-        print(`Completion failed: ${e.message}`);
-    };
-
-    return JSON.stringify(completions.filter((x) => x.startsWith(attrHead)));
+    return JSON.stringify(completions.filter((x) => typeof(x) === 'string' &&
+                                             x.startsWith(attrHead)));
 };
