@@ -568,6 +568,8 @@ function completion_candidates(text, path) {
         break;
     }
 
-    return JSON.stringify(completions.filter((x) => typeof(x) === 'string' &&
+    return JSON.stringify(completions.filter((x) =>
+                                             typeof(x) === 'string' &&
+                                             Number.isNaN(Number(x)) &&
                                              x.startsWith(attrHead)));
 };
