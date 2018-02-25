@@ -555,6 +555,14 @@ function completion_candidates(text, path) {
         emacs.list_properties.call(obj)
         // list_properties gives names with "-" not "_"
             .forEach((x) => { completions.push(x.name.replace(/-/g, "_")) });
+
+        try {
+            // Some objects, eg. `imports`, throw when trying to access missing
+            // properties
+            completions = completions
+                .concat(Reflect.ownKeys(obj.constructor.prototype));
+        } catch (e) {}
+
         break;
     case 'symbol':
     case 'string':
