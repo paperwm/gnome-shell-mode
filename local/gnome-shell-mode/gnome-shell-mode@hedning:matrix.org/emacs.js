@@ -213,6 +213,9 @@ function parseAndReplace(code, prefix) {
         case 'FunctionDeclaration':
             newStatement = functionDeclaration(lines, statement, prefix);
             break;
+        case  'ClassStatement':
+            newStatement = classStatement(lines, statement, prefix);
+            break;
         default:
             // BlockStatements doesn't include closing curly brackets in their
             // location information, so use the start of the next statement
@@ -313,6 +316,12 @@ function functionDeclaration (lines, statement, prefix) {
     // FunctionDeclaration.loc.start point at the start of the function name
     start.column += statement.id.name.length;
     replacement += span(lines, {start, end: statement.loc.end});
+    return replacement;
+}
+
+function classStatement(lines, statement, prefix) {
+    let replacement = prefix + statement.id.name + ' = class ';
+    replacement += span(lines, statement.loc) + '}';
     return replacement;
 }
 
