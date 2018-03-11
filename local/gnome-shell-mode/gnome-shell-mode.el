@@ -190,6 +190,7 @@
 
 (defun gnome-shell--dbus-complete (context)
   "Ask dbus to reload the extension."
+  (gnome-shell--ensure-bootstrap)
   (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
                     "gnome.shell.mode" "Complete"
                     context
