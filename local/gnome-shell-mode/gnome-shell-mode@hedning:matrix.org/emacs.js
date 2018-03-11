@@ -311,11 +311,9 @@ function variableDeclaration (lines, statement, prefix) {
 }
 
 function functionDeclaration (lines, statement, prefix) {
-    let replacement = prefix + statement.id.name + ' = function';
-    let start = Object.assign({}, statement.loc.start);
     // FunctionDeclaration.loc.start point at the start of the function name
-    start.column += statement.id.name.length;
-    replacement += span(lines, {start, end: statement.loc.end});
+    let replacement = prefix + statement.id.name + ' = function ';
+    replacement += span(lines, statement.loc);
     return replacement;
 }
 
