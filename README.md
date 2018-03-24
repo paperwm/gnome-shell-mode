@@ -1,6 +1,6 @@
-## gnome-shell-mode
+## gnome-shell-mode - Looking Glass for Emacs
 
-gnome-shell-mode makes it easy to interactively explore and evaluate javascript in a Gnome Shell session. It supports file local evaluation and auto-completion when working on a loaded Gnome Shell extension.
+gnome-shell-mode makes it easy to interactively explore and evaluate javascript in a [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) session. It supports file local evaluation and auto-completion when working on a loaded Gnome Shell extension.
 
 ## Installation
 
