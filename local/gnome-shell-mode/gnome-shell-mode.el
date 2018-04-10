@@ -72,36 +72,22 @@
                       (if is-undefined "undefined" "null"))))
     (when insert-result
       (save-excursion
-        ;; Always add a undo boundary
-        (undo-boundary)
-
         (end-of-line)
+        (forward-line)
 
-        (if (eobp)
-            (newline)
-          (forward-line))
+        (gnome-shell--clear-output-at (point))
 
-        (when (looking-at "/\\*:[ !]")
-          (message "delete lines")
-          (while (and (not (looking-at ":[ !]\\*/")) (not (eolp)))
-            (kill-whole-line))
-          ;; Kill the line containing ':!' or `: ' too
-          (kill-whole-line))
-
-        (newline)
-        (forward-line -1)
-
-        (let ((marker (if successp ": " ":!")))
-          (insert (if (string-equal "" pp-result)
-                      ;; replace-regexp-in-string is buggy for empty strings
-                      (concat "//" marker)
-                    (concat
-                     "/*" marker "\n"
-                     (replace-regexp-in-string
-                      "\\\\n" "\n"
-                      (replace-regexp-in-string "^" " " pp-result))
-                     "\n" marker "*/"
-                     ))))))
+        (let ((overlay (make-overlay start (point) nil nil nil)))
+          (overlay-put overlay 'after-string
+                       (propertize
+                        (concat pp-result "\n")
+                        'face (list (unless successp 'flyspell-incorrect)
+                                    ;; Black background
+                                    'secondary-selection
+                                    ;; Default foreground
+                                    'default)))
+          (overlay-put overlay 'gnome-shell-output t)
+          (overlay-put overlay 'evaporate t))))
 
     (when (or show-result insert-result)
       ;; This was an interactive action so we give the user appropriate feedback
@@ -124,6 +110,21 @@
       (gnome-shell--show-result result-obj))
 
     result))
+
+(defun gnome-shell-clear-output ()
+  (interactive)
+  (remove-overlays (point-min) (point-max) 'gnome-shell-output t))
+
+(defun gnome-shell-clear-output-at-point ()
+  (interactive)
+  (save-excursion
+    (end-of-line)
+    (gnome-shell--clear-output-at (point))))
+
+(defun gnome-shell--clear-output-at (p)
+  (seq-map 'delete-overlay
+           (-select (lambda (o) (overlay-get o 'gnome-shell-output))
+                    (overlays-in (- p 1) p))))
 
 (defun gnome-shell--flycheck-error (result-obj start end)
   (let* ((result   (alist-get 'value result-obj))
@@ -195,6 +196,14 @@
                     "gnome.shell.mode" "Complete"
                     context
                     (or (buffer-file-name) "")))
+
+(defun gnome-shell--dbus-test (cmd)
+  (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
+                    "gnome.shell.mode" "Test"
+                    cmd (or (buffer-file-name) "")))
+
+
+
 
 (defun gnome-shell-reload ()
   "Reload the extension currently being edited. The buffer will pulse green or
