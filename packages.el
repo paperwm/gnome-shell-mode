@@ -81,6 +81,7 @@ Each entry is either:
         "r" 'gnome-shell-reload
         "c" 'gnome-shell-clear-output-at-point
         "oc" 'gnome-shell-clear-output
+        "oy" 'gnome-shell-copy-output
         "hh" 'gnome-shell-look-up-function-at-point)
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mh" "documentation")
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "ms" "send to Shell")

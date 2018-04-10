@@ -111,6 +111,14 @@
 
     result))
 
+(defun gnome-shell-copy-output ()
+  (interactive)
+  (save-excursion
+    (end-of-line)
+    (let ((overlays (-select (lambda (o) (overlay-get o 'gnome-shell-output))
+                             (overlays-in (- (point) 1) (point)))))
+      (kill-new (overlay-get (car overlays) 'after-string)))))
+
 (defun gnome-shell-clear-output ()
   (interactive)
   (remove-overlays (point-min) (point-max) 'gnome-shell-output t))
