@@ -31,8 +31,8 @@ Make sure you're in gnome-shell-mode (eg. by using <kbd>M-x gnome-shell-mode</kb
 For instance <kbd>,sf</kbd> will evaluate the surrounding function and the evaluated region will pulse green or red depending on the success of the evaluation. If an error occurred, the position reported by gjs will be marked as a flycheck error.
 
 There's two non-standard keybindings:
-- <kbd>Return</kbd> will evaluate the active region (if evil is used)
-- <kbd>C-Return</kbd> will evaluate the active region, or the current line if there's no region active. It will then insert the result as a comment on the next line.
+- <kbd>Return</kbd> will evaluate the active region (if evil is used), the result will be shown in the minibuffer.
+- <kbd>C-Return</kbd> will evaluate the active region, or the current line if there's no region active. The result will be added in an overlay ala. magit-blame. The overlay can be cleared by <kbd>,c</kbd> or by deleting the input.
 
 ### Reload
 
