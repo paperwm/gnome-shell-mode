@@ -3,6 +3,15 @@
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
+const JsParse = imports.misc.jsParse;
+
+let verbose = false;
+
+function verboseLog() {
+    if (verbose) {
+        log("gnome-shell-mode", ...arguments);
+    }
+}
 
 /// Add custom printers here indexed by constructor name
 // (obj, key) => String or primitive to be serialized further to JSON
@@ -516,75 +525,98 @@ function findModule(moduleFilePath) {
     }
 }
 
-const JsParse = imports.misc.jsParse;
-
-let _getAutoCompleteGlobalKeywords = () => {
+function getGlobalCompletionsAndKeywords() {
     const keywords = ['true', 'false', 'null', 'new', 'typeof', 'function',
                       'throw', 'catch', 'try', 'const', 'let', 'var'];
-    // Don't add the private properties of window (i.e., ones starting with '_')
-    const windowProperties = Object.getOwnPropertyNames(window).filter(function(a){ return a.charAt(0) != '_' });
+    const windowProperties = Object.getOwnPropertyNames(window);
 
     return keywords.concat(windowProperties);
 }
 
-function completion_candidates(text, path) {
-    let scope = findScope(path);
-    let AUTO_COMPLETE_GLOBAL_KEYWORDS = _getAutoCompleteGlobalKeywords();
-    let [completions, attrHead] = JsParse.getCompletions(text, '', AUTO_COMPLETE_GLOBAL_KEYWORDS);
-
-    let objectPath = text.split('.').slice(0, -1);
-    let empty = {};
-    let moduleObject = objectPath.reduce((object, path) => {
-        if (object[path]) {
-            return object[path];
-        }
-        return empty;
-    }, scope);
-
-    completions = completions
-        .concat(Object.getOwnPropertyNames(moduleObject));
-
-    let obj;
-    if (moduleObject === scope || moduleObject === empty) {
-        try {
-            let name = text.substring(0, text.length - attrHead.length - 1);
-            obj = (0, eval)(name);
-        } catch (e) {}
-    } else {
-        obj = moduleObject;
+/**
+ * Find the suffix of text that makes most sense as completion context
+ * Eg. "foo(bar.b" -> "bar.b"
+ */
+function findExpressionToComplete(text) {
+    const begin = JsParse.getExpressionOffset(text, text.length-1);
+    if (begin < 0) {
+        return null;
     }
 
-    switch (typeof(obj)) {
-    case 'object':
-        // NB: emacs.list_properties.call(x) crashes gnome-shell when x is a
-        //     (non-empty) string or number
+    return text.slice(begin)
+}
 
-        emacs.list_properties.call(obj)
-        // list_properties gives names with "-" not "_"
-            .forEach((x) => { completions.push(x.name.replace(/-/g, "_")) });
+/**
+ * "foo[0].bar.ba" -> ["foo[0].bar", "ba"]
+ * "fooo" -> [null, "fooo"]
+ */
+function splitIntoBaseAndHead(expr) {
+    let base = null, attrHead = null;
+    // Look for expressions like "Main.panel.foo" and match Main.panel and foo
+    let matches = expr.match(/(.+)\.(.*)/);
+    if (matches) {
+        [base, attrHead] = matches.slice(1); // (first item is whole match)
+    } else {
+        attrHead = expr;
+    }
 
+    return [base, attrHead]
+}
+
+function completion_candidates(text, path) {
+    let completions = [];
+
+    let scope = findScope(path);
+
+    let expr = findExpressionToComplete(text); // Note: In emacs atm. `text` will usually equal `expr`
+    if (expr === null) {
+        verboseLog("Trying to complete invalid expression", text)
+        return [];
+    }
+
+    let [base, attrHead] = splitIntoBaseAndHead(expr);
+
+    if (base === null) {
+        // Complete scope variables, global variables and keywords
+        completions = completions.concat(
+            getGlobalCompletionsAndKeywords(),
+            JsParse.getAllProps(scope)
+        );
+    } else {
+        // Need to evaluate the owner of `attrHead`
+        if (JsParse.isUnsafeExpression(base)) {
+            verboseLog("Unsafe expr", base, attrHead);
+            return [];
+        }
+
+        emacs.module = scope;
+        let baseObj = null;
         try {
+            baseObj = (0, eval)(`with(emacs.module) { ${base} }`);
+        } catch(e) {
             // Some objects, eg. `imports`, throw when trying to access missing
-            // properties
-            completions = completions
-                .concat(Reflect.ownKeys(obj.constructor.prototype));
-        } catch (e) {}
+            // properties. (Completing `imports.not_exist.foo` will throw)
+            verboseLog("Failed to eval base", base);
+            return [];
+        }
 
-        break;
-    case 'symbol':
-    case 'string':
-    case 'number':
-        completions = completions
-            .concat(Reflect.ownKeys(obj.constructor.prototype));
-        break;
-    case 'function':
-        completions = completions
-            .concat(Reflect.ownKeys(obj));
-        break;
+        completions = completions.concat(JsParse.getAllProps(baseObj));
+
+        if(typeof(baseObj) === 'object') {
+            // NB: emacs.list_properties.call(x) crashes gnome-shell when x is a
+            //     (non-empty) string or number
+            emacs.list_properties.call(baseObj)
+                .forEach((x) => {
+                    // list_properties gives names with "-" not "_"
+                    completions.push(x.name.replace(/-/g, "_"))
+                });
+        }
     }
 
     return JSON.stringify(completions.filter((x) =>
                                              typeof(x) === 'string' &&
+                                             x.startsWith(attrHead) &&
                                              Number.isNaN(Number(x)) &&
-                                             x.startsWith(attrHead)));
+                                             JsParse.isValidPropertyName(x)));
 };
+
