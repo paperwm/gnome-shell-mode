@@ -58,7 +58,7 @@ function enable() {
             return Emacs.Reload(code, path);
         },
         Complete: function (code, path) {
-            return Emacs.completion_candidates(code, path);
+            return Emacs.completionCandidates(code, path);
         }
     };
 

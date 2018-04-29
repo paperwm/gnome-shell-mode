@@ -16,14 +16,14 @@ function verboseLog() {
 /// Add custom printers here indexed by constructor name
 // (obj, key) => String or primitive to be serialized further to JSON
 // `key` is undefined if top-level object
-let pretty_printers = {};
+let prettyPrinters = {};
 
-function pp_rect(xywh) {
+function ppRect(xywh) {
     let [x,y,w,h] = xywh.map( v => v.toFixed(1) );
     return `{ x: ${x}, y: ${y}, w: ${w}, h: ${h} }`;
 }
 
-pretty_printers["Object"] = function(obj, key) {
+prettyPrinters["Object"] = function(obj, key) {
     if (obj.toString !== Object.prototype.toString) {
         // The object have a custom toString method
         return obj.toString();
@@ -33,29 +33,29 @@ pretty_printers["Object"] = function(obj, key) {
     }
 }
 
-pretty_printers["Array"] = function(obj, key) {
+prettyPrinters["Array"] = function(obj, key) {
     // Let JSON handle it
     return obj;
 }
 
 
-pretty_printers["Clutter_ActorBox"] = function(box, key) {
+prettyPrinters["Clutter_ActorBox"] = function(box, key) {
     let x = box.get_x();
     let y = box.get_y();
     let w = box.get_width();
     let h = box.get_height();
-    return `ActorBox ${pp_rect([x,y,w,h])}`;
+    return `ActorBox ${ppRect([x,y,w,h])}`;
 }
 
-pretty_printers["Meta_Rectangle"] = function(box, key) {
-    return `Meta_Rectangle ${pp_rect([box.x, box.y, box.width, box.height])}`;
+prettyPrinters["Meta_Rectangle"] = function(box, key) {
+    return `Meta_Rectangle ${ppRect([box.x, box.y, box.width, box.height])}`;
 
 }
 
 function ppObject(obj, key) {
     let customPPFn;
     if (hasConstuctor(obj)) {
-        customPPFn = pretty_printers[obj.constructor.name];
+        customPPFn = prettyPrinters[obj.constructor.name];
     }
     if (customPPFn) {
         return customPPFn(obj, key);
@@ -65,7 +65,7 @@ function ppObject(obj, key) {
 }
 
 
-function pp_helper(root) {
+function ppHelper(root) {
     let seen = new Map();
     seen.set(root, "<Self>")
     function cycleDetectingPP(key, obj) {
@@ -156,13 +156,13 @@ function prettyPrint(obj) {
     {
         // Use JSON.stringify as a poor man's pretty printer for simple
         // composite objects
-        return JSON.stringify(obj, pp_helper(obj));
+        return JSON.stringify(obj, ppHelper(obj));
     } else if(typeof(obj) === "string") {
         // A pretty string have quotes around it to not conceal it's true nature
         return JSON.stringify(obj);
     } else {
         // Top level simple or complex constructor
-        let pretty = pp_helper(obj)(undefined, obj);
+        let pretty = ppHelper(obj)(undefined, obj);
         if(typeof(pretty) !== "string") {
             // Emacs expects a string, even for numbers
             pretty = JSON.stringify(pretty);
@@ -404,7 +404,7 @@ function Eval(code, path) {
     emacs.module = findScope(path);
 
     let sourceMap;
-    let eval_result;
+    let evalResult;
     let result;
     let success = true;
     try {
@@ -413,13 +413,13 @@ function Eval(code, path) {
         } catch(e) {
             // Let eval take care of syntax errors too
         }
-        eval_result =  (0, eval)(`with(emacs.module){ ${code} }`);
+        evalResult =  (0, eval)(`with(emacs.module){ ${code} }`);
         result = {
             success: true,
         };
 
         try {
-            result.value = prettyPrint(eval_result)
+            result.value = prettyPrint(evalResult)
 
         } catch(e) {
             result.value = "Error during pretty printing: " + e.message;
@@ -563,7 +563,7 @@ function splitIntoBaseAndHead(expr) {
     return [base, attrHead]
 }
 
-function completion_candidates(text, path) {
+function completionCandidates(text, path) {
     let completions = [];
 
     let scope = findScope(path);
