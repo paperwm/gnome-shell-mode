@@ -571,7 +571,7 @@ function completionCandidates(text, path) {
     let expr = findExpressionToComplete(text); // Note: In emacs atm. `text` will usually equal `expr`
     if (expr === null) {
         verboseLog("Trying to complete invalid expression", text)
-        return [];
+        return JSON.stringify([]);
     }
 
     let [base, attrHead] = splitIntoBaseAndHead(expr);
@@ -586,7 +586,7 @@ function completionCandidates(text, path) {
         // Need to evaluate the owner of `attrHead`
         if (JsParse.isUnsafeExpression(base)) {
             verboseLog("Unsafe expr", base, attrHead);
-            return [];
+            return JSON.stringify([]);
         }
 
         emacs.module = scope;
@@ -597,7 +597,7 @@ function completionCandidates(text, path) {
             // Some objects, eg. `imports`, throw when trying to access missing
             // properties. (Completing `imports.not_exist.foo` will throw)
             verboseLog("Failed to eval base", base);
-            return [];
+            return JSON.stringify([]);
         }
 
         completions = completions.concat(JsParse.getAllProps(baseObj));
