@@ -39,7 +39,7 @@ const EvalIface =
 <method name="Complete"> \
     <arg type="s" direction="in" name="code" /> \
     <arg type="s" direction="in" name="path" /> \
-    <arg type="s" direction="out" name="result" /> \
+    <arg type="as" direction="out" name="result" /> \
 </method> \
 </interface> \
 </node> \
