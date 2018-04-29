@@ -563,6 +563,16 @@ function splitIntoBaseAndHead(expr) {
     return [base, attrHead]
 }
 
+function isGObject(object) {
+    try {
+        // NB: not a 100% sure this test is accurate
+        return object && typeof(object) === 'object' && object.__metaclass__;
+    } catch(e) {
+        // GjsFileImporter (eg. `imports`) throw when accessing non-existent property
+        return false;
+    }
+}
+
 function completionCandidates(text, path) {
     let completions = [];
 
@@ -602,7 +612,7 @@ function completionCandidates(text, path) {
 
         completions = completions.concat(JsParse.getAllProps(baseObj));
 
-        if(typeof(baseObj) === 'object') {
+        if (isGObject(baseObj)) {
             // NB: emacs.list_properties.call(x) crashes gnome-shell when x is a
             //     (non-empty) string or number
             emacs.list_properties.call(baseObj)
@@ -618,4 +628,3 @@ function completionCandidates(text, path) {
                                              x.startsWith(attrHead) &&
                                              JsParse.isValidPropertyName(x)));
 };
-
