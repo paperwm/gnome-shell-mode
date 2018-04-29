@@ -86,6 +86,4 @@ Reassignment relies on SpiderMonkey's built in parser. We traverse the top level
 
 Not all methods of GObjects (g-object-introspected classes) complete before they're used the first time. This include a lot of classes you'll interact with. eg. `MetaWindow`. We're unsure how to fix this. Suggestions are welcome.
 
-Completion doesn't work for string and function objects.
-
 While gnome-shell-mode shouldn't cause any crashes by itself, evaluating javascript in Gnome Shell is not completely safe, some code will result in a crash. Eg. looking up a non-existing dconf/schema name will cause a crash.
