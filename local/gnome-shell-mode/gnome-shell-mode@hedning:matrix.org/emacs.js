@@ -616,7 +616,6 @@ function completion_candidates(text, path) {
     return JSON.stringify(completions.filter((x) =>
                                              typeof(x) === 'string' &&
                                              x.startsWith(attrHead) &&
-                                             Number.isNaN(Number(x)) &&
                                              JsParse.isValidPropertyName(x)));
 };
 
