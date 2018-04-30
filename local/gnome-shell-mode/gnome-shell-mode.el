@@ -31,7 +31,7 @@
 ;; (autoload 'gnome-shell-mode "gnome-shell" "Major mode to edit gnome-shell javascript files" t)
 
 ;; The latest version of gnome-shell-mode.el can be found at
-;; https://github.com/hedning/gnome-shell-mode
+;; https://github.com/paperwm/gnome-shell-mode
 
 ;; Comments / suggestions welcome!
 
