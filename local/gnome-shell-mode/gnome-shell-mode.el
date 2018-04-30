@@ -40,7 +40,10 @@
 
 ;;; Code:
 
+(require 'js2-mode)
 (require 'dbus)
+(require 'flycheck)
+(require 'json)
 
 (defconst gnome-shell--helper-path
   (file-name-directory (or load-file-name buffer-file-name)))
