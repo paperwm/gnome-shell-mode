@@ -208,11 +208,6 @@
                     context
                     (or (buffer-file-name) "")))
 
-(defun gnome-shell--dbus-test (cmd)
-  (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
-                    "gnome.shell.mode" "Test"
-                    cmd (or (buffer-file-name) "")))
-
 (defun gnome-shell-restart ()
   "Disable the extension that the current buffer is part of and restart Gnome
 Shell afterwards. This can make restarts a bit more controlled as the extension
