@@ -454,72 +454,37 @@ function Eval(code, path) {
  */
 function Reload(code, path) {
     // Make sure that we're in an ext
-    let [type, root] = findExtensionRoot(path);
+    let [type, extensionImports, root] = findExtensionImports(path);
 
-    let uuid;
-    if (type === 'extension') {
-        let metadataFile = `${root}/metadata.json`;
-        if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
-            const [success, metadata] = GLib.file_get_contents(metadataFile);
-            uuid = JSON.parse(metadata.toString()).uuid;
-            if (uuid === undefined) {
-                return [false, 'Extension is missing the uuid'];
-            }
-        }
-    } else {
-        return [false, 'Not a valid extension'];
+    if (type !== 'extension') {
+        return [false, 'Not in a valid extension'];
     }
 
-    let extension = imports.misc.extensionUtils.extensions[uuid];
-    let modules = extension.imports.extension.modules;
     // Disable the extension
-    extension.imports.extension.disable();
+    extensionImports.extension.disable();
 
-    // Reload the modules
+    // Reload the code
     const [evalSuccess, result] = Eval(code, path);
     // Enable the extension again
-    extension.imports.extension.enable();
+    extensionImports.extension.enable();
     return [evalSuccess, result];
 }
 
-function findModule(moduleFilePath) {
-    let [type, projectRoot] = findExtensionRoot(moduleFilePath);
-    let empty = {};
-    if (projectRoot === null || type === null) {
-        return null;
-    }
+function findModule(path) {
+    let [type, extensionImports, projectRoot] = findExtensionImports(path);
 
     // (projectRoot does not end with slash)
-    let relPath = moduleFilePath.slice(projectRoot.length+1);
-
-    let uuid;
-    if (type === 'extension') {
-        let metadataFile = `${projectRoot}/metadata.json`;
-        if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
-            const [success, metadata] = GLib.file_get_contents(metadataFile);
-            uuid = JSON.parse(metadata.toString()).uuid;
-            if (uuid === undefined) {
-                return null;
-            }
-        }
-    }
+    let relPath = path.slice(projectRoot.length+1);
 
     // Find the module object we're in
     if (relPath.endsWith('.js')) {
         relPath = relPath.substring(0, relPath.length - 3);
-        let moduleImports;
-        if (type === 'extension') {
-            moduleImports =
-                imports.misc.extensionUtils.extensions[uuid].imports;
-        } else if (type === 'shell') {
-            moduleImports = imports;
-        }
         return relPath.split('/').reduce((module, name) => {
             if (module[name]) {
                 return module[name];
             }
             return empty;
-        },  moduleImports);
+        },  extensionImports);
     } else {
         return null;
     }
