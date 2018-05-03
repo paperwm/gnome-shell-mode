@@ -525,6 +525,26 @@ function findModule(moduleFilePath) {
     }
 }
 
+function findExtensionImports(path) {
+    let [type, projectRoot] = findExtensionRoot(path);
+    if (projectRoot === null || type === null) {
+        return [null, null, null];
+    }
+
+    if (type === 'extension') {
+        let metadataFile = `${projectRoot}/metadata.json`;
+        if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
+            const [success, metadata] = GLib.file_get_contents(metadataFile);
+            let uuid = JSON.parse(metadata.toString()).uuid;
+            if (uuid === undefined)
+                return [null, null, null];
+            return [type, imports.misc.extensionUtils.extensions[uuid].imports, projectRoot];
+        }
+    } else if (type === 'shell') {
+        return [type, imports, projectRoot];
+    }
+}
+
 function getGlobalCompletionsAndKeywords() {
     const keywords = ['true', 'false', 'null', 'new', 'typeof', 'function',
                       'throw', 'catch', 'try', 'const', 'let', 'var'];
