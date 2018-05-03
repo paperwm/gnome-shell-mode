@@ -213,8 +213,15 @@
                     "gnome.shell.mode" "Test"
                     cmd (or (buffer-file-name) "")))
 
-
-
+(defun gnome-shell-restart ()
+  "Disable the extension that the current buffer is part of and restart Gnome
+Shell afterwards. This can make restarts a bit more controlled as the extension
+is given a chance to clean things up etc."
+  (interactive)
+  (gnome-shell--ensure-bootstrap)
+  (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
+                    "gnome.shell.mode" "Restart"
+                    (or (buffer-file-name) "")))
 
 (defun gnome-shell-reload ()
   "Reload the extension currently being edited. The buffer will pulse green or

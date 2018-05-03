@@ -478,7 +478,8 @@ function Restart(path) {
     if (type !== 'extension')
         return;
     extensionImports.extension.disable();
-    imports.gi.Meta.restart('Restart with disable');
+    imports.gi.Meta.restart(
+        `Restarting (disabled ${extensionImports.__moduleName__} first)`);
 }
 
 function findModule(path) {
