@@ -36,6 +36,9 @@ const EvalIface =
     <arg type="b" direction="out" name="success" /> \
     <arg type="s" direction="out" name="result" /> \
 </method> \
+<method name="Restart"> \
+    <arg type="s" direction="in" name="path" /> \
+</method> \
 <method name="Complete"> \
     <arg type="s" direction="in" name="code" /> \
     <arg type="s" direction="in" name="path" /> \
@@ -59,6 +62,9 @@ function enable() {
         },
         Complete: function (code, path) {
             return Emacs.completionCandidates(code, path);
+        },
+        Restart: function (path) {
+            Emacs.Restart(path);
         }
     };
 

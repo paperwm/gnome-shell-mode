@@ -470,6 +470,17 @@ function Reload(code, path) {
     return [evalSuccess, result];
 }
 
+/**
+   Run extension.disable and then restart Gnome Shell
+ */
+function Restart(path) {
+    let [type, extensionImports, _] = findExtensionImports(path);
+    if (type !== 'extension')
+        return;
+    extensionImports.extension.disable();
+    imports.gi.Meta.restart('Restart with disable');
+}
+
 function findModule(path) {
     let [type, extensionImports, projectRoot] = findExtensionImports(path);
 
