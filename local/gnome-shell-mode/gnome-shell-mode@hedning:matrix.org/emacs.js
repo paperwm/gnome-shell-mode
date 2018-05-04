@@ -244,6 +244,16 @@ function parseAndReplace(code, prefix) {
                         line = lines[end.line];
                     }
                     end.column = line.lastIndexOf('function');
+                } else if (nextStmt.type == 'ClassStatement') {
+                        // We need to search backwards for `function`
+                        end = Object.assign({}, nextStmt.loc.start);
+                        let line = lines[end.line].substring(0, end.column);
+                        while (line.lastIndexOf('class') === -1) {
+                            end.column = 0;
+                            end.line = end.line - 1;
+                            line = lines[end.line];
+                        }
+                        end.column = line.lastIndexOf('class');
                 } else {
                     end = nextStmt.loc.start;
                 }
