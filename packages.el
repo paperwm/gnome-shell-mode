@@ -107,11 +107,11 @@ Each entry is either:
 
       )))
 
+(defun gnome-shell/post-init-js2-mode ())
+
+(defun gnome-shell/post-init-company ())
+
 (defun gnome-shell/post-init-flycheck ()
   (spacemacs/enable-flycheck 'gnome-shell-mode))
-
-(defun gnome-shell/post-init-gnome-shell-mode ()
-  ;; (spacemacs|add-company-hook gnome-shell-mode)
-  )
 
 ;;; packages.el ends here

@@ -1,5 +1,6 @@
 
 (require 'gnome-shell-mode)
+(require 'company)
 
 (defun company-gnome-shell--candidates ()
   "Candidates handler for the company backend."
