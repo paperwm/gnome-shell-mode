@@ -40,6 +40,10 @@ The mode supports reloading buffers with <kbd>, r</kbd>. This works by first dis
 
 To get full use of this, `enable` and `disable` need to assemble and disassemble all the state in the extension. A good way to handle this is having `enable` and `disable` functions in every module, making the exension's `enable` and `disable` just call out to the module's functions.
 
+### Restart
+
+Pressing <kbd>, R</kbd> in spacemacs will disable the extension the current buffer is part of and then restart Gnome Shell. This gives the extension a change to clean up and save any state making the restart less disruptive. This can also be accessed through the interactive function `gnome-shell-restart`. Note that restart is only supported on X11.
+
 ### Documentation lookup
 
 There's basic support for documentation lookup using <kbd>, h h</kbd>. This will prompt you with a list of known symbols matching the current word, selecting one will open the documentation of that symbol in your browser.
