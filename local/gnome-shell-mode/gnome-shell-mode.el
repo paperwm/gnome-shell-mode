@@ -219,8 +219,9 @@ is given a chance to clean things up etc."
                     (or (buffer-file-name) "")))
 
 (defun gnome-shell-reload ()
-  "Reload the extension currently being edited. The buffer will pulse green or
-red depending on the success of the reload."
+  "Reload the current buffer.
+
+Disables the extension, evaluates the buffer and enables the extension again."
   (interactive)
   (gnome-shell--ensure-bootstrap)
   (let* ((result-obj (destructuring-bind (successp jsonres)

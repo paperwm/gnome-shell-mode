@@ -89,6 +89,7 @@ Each entry is either:
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mo" "output")
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "moc" "clear all output")
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mc" "clear output")
+      (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mr" "Reload buffer")
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mR" "Restart Gnome Shell")
 
       (evil-define-key 'visual gnome-shell-mode-map (kbd "<return>") 'gnome-shell-send-region)
