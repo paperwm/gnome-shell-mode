@@ -159,7 +159,7 @@ function prettyPrint(obj) {
         return JSON.stringify(obj, ppHelper(obj));
     } else if(typeof(obj) === "string") {
         // A pretty string have quotes around it to not conceal it's true nature
-        return JSON.stringify(obj);
+        return `"${obj.replace(/"/g, '\\"')}"`;
     } else {
         // Top level simple or complex constructor
         let pretty = ppHelper(obj)(undefined, obj);
