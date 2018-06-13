@@ -226,42 +226,7 @@ function parseAndReplace(code, prefix) {
             newStatement = classStatement(lines, statement, prefix);
             break;
         default:
-            // BlockStatements doesn't include closing curly brackets in their
-            // location information, so use the start of the next statement
-            // instead as the end of the span.
-            let nextStmt = ast.body[i+1];
-            let end;
-            if (nextStmt) {
-                // Function declarations reports start as the start of the
-                // function name
-                if (nextStmt.type == 'FunctionDeclaration') {
-                    // We need to search backwards for `function`
-                    end = Object.assign({}, nextStmt.loc.start);
-                    let line = lines[end.line].substring(0, end.column);
-                    while (line.lastIndexOf('function') === -1) {
-                        end.column = 0;
-                        end.line = end.line - 1;
-                        line = lines[end.line];
-                    }
-                    end.column = line.lastIndexOf('function');
-                } else if (nextStmt.type == 'ClassStatement') {
-                        // We need to search backwards for `function`
-                        end = Object.assign({}, nextStmt.loc.start);
-                        let line = lines[end.line].substring(0, end.column);
-                        while (line.lastIndexOf('class') === -1) {
-                            end.column = 0;
-                            end.line = end.line - 1;
-                            line = lines[end.line];
-                        }
-                        end.column = line.lastIndexOf('class');
-                } else {
-                    end = nextStmt.loc.start;
-                }
-            } else {
-                end = { line: lines.length,
-                        column: lines[lines.length-1].length};
-            }
-            newStatement = span(lines, {start: statement.loc.start, end});
+            newStatement = getStatement(lines, statement);
         }
         // Always add a semicolon to the built statement for safety
         newStatement += ';\n';
@@ -273,6 +238,65 @@ function parseAndReplace(code, prefix) {
         statements.push(newStatement);
     }
     return [statements.join('\n'), sourceMap];
+}
+
+/**
+   Workarounds for the somewhat weird locs Reflect.parse returns, mostly due to
+   block statements not including their closing bracket.
+ */
+function getStatement(lines, statement) {
+    switch (statement.type) {
+    case  'BlockStatement':
+        return `${span(lines, statement.loc)} }`;
+
+    case 'IfStatement':
+        var test = getStatement(lines, statement.test);
+        var consquence = getStatement(lines, statement.consequent);
+        var alternate = statement.alternate !== null ?
+            `else ${getStatement(lines, statement.alternate)}` : "";
+        return `if (${test}) ${consquence} ${alternate}`;
+
+    case 'WithStatement':
+        var object = getStatement(lines, statement.object);
+        var body = getStatement(lines, statement.body);
+        return `with (${object}) ${body}`;
+
+    case 'WhileStatement':
+        var test = getStatement(lines, statement.test);
+        var body = getStatement(lines, statement.body);
+        return `while (${test}) ${body}`;
+
+    case 'ForStatement':
+        var test = statement.test !== null ?
+            getStatement(lines, statement.test) : "";
+        var init = statement.init ?
+            getStatement(lines, statement.init) : "";
+        var update = statement.update ?
+            getStatement(lines, statement.update) : "";
+        var body = getStatement(lines, statement.body);
+        return `for (${init}; ${test}; ${update}) ${body}`;
+
+    case 'ForInStatement':
+        var left = getStatement(lines, statement.left);
+        var right = getStatement(lines, statement.right);
+        var body = getStatement(lines, statement.body);
+        return `for (${left} in ${right}) ${body}`;
+
+    case 'ForOfStatement':
+        var left = getStatement(lines, statement.left);
+        var right = getStatement(lines, statement.right);
+        var body = getStatement(lines, statement.body);
+        return `for (${left} of ${right}) ${body}`;
+
+    case 'FunctionDeclaration':
+        return `function ${span(lines, statement.loc)}`;
+
+    case 'ClassStatement':
+        return `class ${span(lines, statement.loc)} }`;
+
+    default:
+        return span(lines, statement.loc);
+    }
 }
 
 /**
