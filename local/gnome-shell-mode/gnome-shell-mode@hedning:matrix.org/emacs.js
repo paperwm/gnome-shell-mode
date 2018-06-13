@@ -219,11 +219,10 @@ function parseAndReplace(code, prefix) {
         case 'VariableDeclaration':
             newStatement = variableDeclaration(lines, statement, prefix);
             break;
-        case 'FunctionDeclaration':
-            newStatement = functionDeclaration(lines, statement, prefix);
-            break;
         case  'ClassStatement':
-            newStatement = classStatement(lines, statement, prefix);
+        case 'FunctionDeclaration':
+            newStatement = prefix + statement.id.name + ' = ';
+            newStatement += getStatement(lines, statement);
             break;
         default:
             newStatement = getStatement(lines, statement);
@@ -349,19 +348,6 @@ function variableDeclaration (lines, statement, prefix) {
         replacement += ',';
     }
     replacement = replacement.replace(/,$/, '');
-    return replacement;
-}
-
-function functionDeclaration (lines, statement, prefix) {
-    // FunctionDeclaration.loc.start point at the start of the function name
-    let replacement = prefix + statement.id.name + ' = function ';
-    replacement += span(lines, statement.loc);
-    return replacement;
-}
-
-function classStatement(lines, statement, prefix) {
-    let replacement = prefix + statement.id.name + ' = class ';
-    replacement += span(lines, statement.loc) + '}';
     return replacement;
 }
 
