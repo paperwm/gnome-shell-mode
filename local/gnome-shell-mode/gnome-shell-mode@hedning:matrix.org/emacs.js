@@ -288,11 +288,28 @@ function getStatement(lines, statement) {
         var body = getStatement(lines, statement.body);
         return `for (${left} of ${right}) ${body}`;
 
+    case 'FunctionExpression':
     case 'FunctionDeclaration':
         return `function ${span(lines, statement.loc)}`;
 
+    case  'ClassExpression':
     case 'ClassStatement':
         return `class ${span(lines, statement.loc)} }`;
+
+    case  'ArrowFunctionExpression':
+        // statement.loc produces things like `= () => {}`
+        var params = statement.params
+            .map(p => getStatement(lines, p)).toString();
+        var body = getStatement(lines, statement.body);
+        return `(${params}) => ${body}`;
+
+    case 'UpdateExpression':
+        // ++/-- isn't included in statement.loc
+        var argument = getStatement(lines, statement.argument);
+        if (statement.prefix)
+            return `${statement.operator}${argument}`;
+        else
+            return `${argument}${statement.operator}`;
 
     default:
         return span(lines, statement.loc);
@@ -321,27 +338,9 @@ function variableDeclaration (lines, statement, prefix) {
         replacement += '(';
         replacement += pattern(lines, declaration.id, prefix);
 
-        if (declaration.init) {
-            // init.loc.start is often bonkers so we need to work around that
-            // In addition id.loc.end is goes to the end of the
-            // statement if it's an Identfier
-            let start;
-            if (declaration.id.type === 'Identifier') {
-                start = Object.assign({}, declaration.loc.start);
-            } else {
-                start = Object.assign({}, declaration.id.loc.end);
-            }
-            // Look for the first `=` we can find starting at a position
-            // where we know the next `=` is the init equal sign
-            let line = lines[start.line];
-            while (line.indexOf('=', start.column) === -1) {
-                start.column = 0;
-                start.line = start.line + 1;
-                line = lines[start.line];
-            }
-            start.column = line.indexOf('=', start.column);
-
-            replacement += span(lines, {start, end: declaration.init.loc.end});
+        let init = declaration.init;
+        if (init) {
+            replacement += `= ${getStatement(lines, init)}`;
         } else {
             // Handle cases like 'let foo'
             replacement += `=  ${prefix}${declaration.id.name}`;
