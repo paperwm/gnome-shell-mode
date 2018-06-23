@@ -36,7 +36,7 @@
     (gnome-shell-mode :location local)
     (company-gnome-shell :location local)
     flycheck)
-  "The list of Lisp packages required by the notion layer.
+  "The list of Lisp packages required by the gnome-shell layer.
 
 Each entry is either:
 

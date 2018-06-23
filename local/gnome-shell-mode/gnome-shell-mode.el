@@ -383,7 +383,7 @@ If error:
 
 (easy-menu-define gnome-shell-mode-menu gnome-shell-mode-map
 "'gnome-shell-mode' menu"
-                  '("Notion"
+                  '("Gnome-Shell"
                     ("Interaction"
                     ["Send Procedure" gnome-shell-send-proc t]
                     ["Send Region" gnome-shell-send-region t]
