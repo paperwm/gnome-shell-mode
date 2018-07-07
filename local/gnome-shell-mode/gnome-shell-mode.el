@@ -48,10 +48,22 @@
 (defconst gnome-shell--helper-path
   (file-name-directory (or load-file-name buffer-file-name)))
 
+(defvar gnome-shell-dbus-address :session
+  "The dbus address used for connections (value of DBUS_SESSION_BUS_ADDRESS)
+NB: don't set directly, use `gnome-shell-set-dbus-address'")
+
 (defconst gnome-shell-gjs-documentation-url
   "https://people.gnome.org/~gcampagna/docs/")
 (defconst gnome-symbol-query-url
   "https://developer.gnome.org/symbols/")
+
+(defun gnome-shell-set-dbus-address (address)
+  "Set the dbus address. (set to :session for the default bus)"
+  (interactive "sDBus address: ")
+  (if (equal address ":session")
+      (setq address :session))
+  (dbus-init-bus address)
+  (setq gnome-shell-dbus-address address))
 
 (defun gnome-shell--name-at-point ()
   "Get current Name { ['.'|[<number>|<variable>]} Name } sequence."
@@ -173,7 +185,7 @@
 
 (defun gnome-shell--dbus-bootstrap-eval (cmd)
   "Function to bootstrap our own Eval"
-  (dbus-call-method :session "org.gnome.Shell" "/org/gnome/Shell"
+  (dbus-call-method gnome-shell-dbus-address "org.gnome.Shell" "/org/gnome/Shell"
                     "org.gnome.Shell" "Eval" cmd))
 
 (defun gnome-shell--ensure-bootstrap ()
@@ -187,26 +199,30 @@
       (gnome-shell--dbus-bootstrap-eval
        (concat (buffer-string) "('" gnome-shell--helper-path "')")))))
 
+(defun gnome-shell--dbus-call-mode (&rest args)
+  (apply #'dbus-call-method gnome-shell-dbus-address
+         "org.gnome.Shell" "/gnome/shell/mode" "gnome.shell.mode"
+         args))
+
+
 (defun gnome-shell--dbus-eval (cmd)
   "Raw dbus eval call. Returns a list: (success/boolean result/string)"
-  (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
-                    "gnome.shell.mode" "Eval"
-                    cmd (or (buffer-file-name) "")))
+  (gnome-shell--dbus-call-mode "Eval"
+                               cmd
+                               (or (buffer-file-name) "")))
 
 (defun gnome-shell--dbus-reload ()
   "Ask dbus to reload the extension."
-  (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
-                    "gnome.shell.mode" "Reload"
-                    (buffer-string)
-                    (or (buffer-file-name) "")))
+  (gnome-shell--dbus-call-mode "Reload"
+                          (buffer-string)
+                          (or (buffer-file-name) "")))
 
 (defun gnome-shell--dbus-complete (context)
   "Ask dbus to reload the extension."
   (gnome-shell--ensure-bootstrap)
-  (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
-                    "gnome.shell.mode" "Complete"
-                    context
-                    (or (buffer-file-name) "")))
+  (gnome-shell--dbus-call-mode "Complete"
+                               context
+                               (or (buffer-file-name) "")))
 
 (defun gnome-shell-restart ()
   "Disable the extension that the current buffer is part of and restart Gnome
@@ -214,9 +230,8 @@ Shell afterwards. This can make restarts a bit more controlled as the extension
 is given a chance to clean things up etc."
   (interactive)
   (gnome-shell--ensure-bootstrap)
-  (dbus-call-method :session "org.gnome.Shell" "/gnome/shell/mode"
-                    "gnome.shell.mode" "Restart"
-                    (or (buffer-file-name) "")))
+  (gnome-shell--dbus-call-mode "Restart"
+                               (or (buffer-file-name) "")))
 
 (defun gnome-shell-reload ()
   "Reload the current buffer.
