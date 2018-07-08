@@ -289,7 +289,8 @@ function getStatement(lines, statement) {
 
     case 'FunctionExpression':
     case 'FunctionDeclaration':
-        return `function ${span(lines, statement.loc)}`;
+        var g = statement.generator ? '*' : '';
+        return `function${g} ${span(lines, statement.loc)}`;
 
     case  'ClassExpression':
     case 'ClassStatement':
