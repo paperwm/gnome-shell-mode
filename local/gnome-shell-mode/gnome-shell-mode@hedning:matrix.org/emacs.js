@@ -246,7 +246,13 @@ function parseAndReplace(code, prefix) {
 function getStatement(lines, statement) {
     switch (statement.type) {
     case  'BlockStatement':
-        return `${span(lines, statement.loc)} }`;
+        // Block AST nodes omits the ending '}'
+        var block = `${span(lines, statement.loc)} }`;
+        if (statement.body[-1].type === 'BlockStatement') {
+            // Omission of ending '}' "nests" (but only one level..)
+            return block + " }"
+        }
+        return block;
 
     case 'IfStatement':
         var test = getStatement(lines, statement.test);
