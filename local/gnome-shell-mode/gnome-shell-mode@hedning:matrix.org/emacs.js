@@ -239,11 +239,38 @@ function parseAndReplace(code, prefix) {
     return [statements.join('\n'), sourceMap];
 }
 
+// Gnome Shell 3.30 removed global.screen, so we're using it here as a way to
+// check if we're dealing with spdiermonkey 60 or not.
+var getStatement = global.screen ?
+    getStatementMoz52 :
+    getStatementMoz60;
+
+// Spidermonkey 60 fixes most of the weird loc problems
+function getStatementMoz60(lines, statement) {
+    switch (statement.type) {
+
+    case 'FunctionExpression':
+    case 'FunctionDeclaration':
+        var g = statement.generator ? '*' : '';
+        return `function${g} ${span(lines, statement.loc)}`;
+
+    case  'ArrowFunctionExpression':
+        // statement.loc produces things like `= () => {}`
+        var params = statement.params
+            .map(p => getStatement(lines, p)).toString();
+        var body = getStatement(lines, statement.body);
+        return `(${params}) => ${body}`;
+
+    default:
+        return span(lines, statement.loc);
+    }
+}
+
 /**
-   Workarounds for the somewhat weird locs Reflect.parse returns, mostly due to
-   block statements not including their closing bracket.
- */
-function getStatement(lines, statement) {
+   Workarounds for the somewhat weird locs Reflect.parse returns in spidermonkey
+   52, mostly due to block statements not including their closing bracket.
+*/
+function getStatementMoz52(lines, statement) {
     switch (statement.type) {
     case  'BlockStatement':
         // Block AST nodes omits the ending '}'
