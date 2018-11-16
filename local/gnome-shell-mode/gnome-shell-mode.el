@@ -189,8 +189,9 @@ NB: don't set directly, use `gnome-shell-set-dbus-address'")
                     "org.gnome.Shell" "Eval" cmd))
 
 (defun gnome-shell--ensure-bootstrap ()
-  (unless (car (gnome-shell--dbus-bootstrap-eval
-                "imports.misc.extensionUtils.extensions['gnome-shell-mode@hedning:matrix.org'].state !== 1"))
+  (unless (dbus-introspect-get-interface gnome-shell-dbus-address
+                                         "org.gnome.Shell" "/gnome/shell/mode"
+                                         "gnome.shell.mode")
     ;; send init code
     (message "sending init code")
     (with-temp-buffer
