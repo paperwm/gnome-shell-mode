@@ -80,6 +80,7 @@ Each entry is either:
         "sr" 'gnome-shell-send-region
         "r" 'gnome-shell-reload
         "R" 'gnome-shell-restart
+        "l" 'gnome-shell-launch-session
         "c" 'gnome-shell-clear-output-at-point
         "oc" 'gnome-shell-clear-output
         "oy" 'gnome-shell-copy-output
@@ -89,8 +90,9 @@ Each entry is either:
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mo" "output")
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "moc" "clear all output")
       (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mc" "clear output")
-      (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mr" "Reload buffer")
-      (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mR" "Restart Gnome Shell")
+      (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mr" "reload buffer")
+      (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "mR" "restart session")
+      (spacemacs/declare-prefix-for-mode 'gnome-shell-mode "ml" "launch session")
 
       (evil-define-key 'visual gnome-shell-mode-map (kbd "<return>") 'gnome-shell-send-region)
       )
