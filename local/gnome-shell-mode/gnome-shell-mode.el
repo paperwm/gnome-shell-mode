@@ -386,25 +386,42 @@ If error:
 (defvar gnome-shell--process nil
   "The gnome shell process if running a nested shell")
 
-(defun gnome-shell--get-extension-uudid ()
+(defun gnome-shell--get-extension-uuid ()
+  (message (buffer-file-name))
+  (replace-regexp-in-string "\"" "" (alist-get
+    'value
+    (gnome-shell-eval
+     ;; This is pretty ad-hoc and hacky
+     (format
+      "
+      let selfUuid = '%s';
+      let path = '%s';
+      let self = imports.misc.extensionUtils.extensions[selfUuid];
+      let e = self.imports.emacs;
+      let [type, root] = e.findExtensionRoot(path);
+      e.findExtension(root).uuid
+      "
+      "gnome-shell-mode@hedning:matrix.org" (or (buffer-file-name) "")))))
 
-  )
+)
 
 (defun gnome-shell-launch-session (&optional wayland extensions)
   "Launch a nested X11/wayland session"
   (interactive)
   (if (process-live-p gnome-shell--process)
       (gnome-shell-session-log)
+    (gnome-shell-set-dbus-address :session)
     (let ((name "gnome-session")
           (bus-address nil)
-          (buffer (create-file-buffer " *gnome-session*")))
+          (buffer (create-file-buffer " *gnome-session*"))
+          (uuid (gnome-shell--get-extension-uuid)))
 
       (setq gnome-shell--process
             (start-process
              name buffer
              (concat gnome-shell--helper-path "session.sh")
              "wayland"
-             "'paperwm@hedning:matrix.org'"
+             uuid
              ))
 
       (set-process-filter gnome-shell--process

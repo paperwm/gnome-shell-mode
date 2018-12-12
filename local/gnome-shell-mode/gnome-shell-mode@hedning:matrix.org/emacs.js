@@ -562,16 +562,23 @@ function findExtensionImports(path) {
     }
 
     if (type === 'extension') {
-        let metadataFile = `${projectRoot}/metadata.json`;
-        if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
-            const [success, metadata] = GLib.file_get_contents(metadataFile);
-            let uuid = JSON.parse(metadata.toString()).uuid;
-            if (uuid === undefined)
-                return [null, null, null];
-            return [type, imports.misc.extensionUtils.extensions[uuid].imports, projectRoot];
+        let extension = findExtension(projectRoot);
+        if (extension) {
+            return [type, extension.imports, projectRoot];
         }
     } else if (type === 'shell') {
         return [type, imports, projectRoot];
+    }
+}
+
+function findExtension(projectRoot) {
+    let metadataFile = `${projectRoot}/metadata.json`;
+    if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
+        const [success, metadata] = GLib.file_get_contents(metadataFile);
+        let uuid = JSON.parse(metadata.toString()).uuid;
+        if (uuid === undefined)
+            return false;
+        return imports.misc.extensionUtils.extensions[uuid];
     }
 }
 

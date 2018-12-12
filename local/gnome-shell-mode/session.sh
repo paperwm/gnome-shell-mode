@@ -31,10 +31,10 @@ case "$1" in
         args=--x11
         ;;
 esac
-
+shift
 
 dconf reset -f /  # Reset settings
-dconf write /org/gnome/shell/enabled-extensions "['paperwm@hedning:matrix.org']"
+dconf write /org/gnome/shell/enabled-extensions "['$1']"
 
 gnome-shell $args 2>&1 | sed 's/\x1b\[[0-9;]*m//g'
 
