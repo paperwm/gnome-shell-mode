@@ -40,6 +40,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'js2-mode)
 (require 'dbus)
 (require 'flycheck)
@@ -381,6 +382,43 @@ If error:
     (when selected-candidate
         (browse-url (concat gnome-symbol-query-url "?q=" selected-candidate))
       )))
+
+(defvar gnome-shell--process nil
+  "The gnome shell process if running a nested shell")
+
+(defun gnome-shell--get-extension-uudid ()
+
+  )
+
+(defun gnome-shell-launch-session (&optional wayland extensions)
+  "Launch a nested X11/wayland session"
+  (interactive)
+  (if (process-live-p gnome-shell--process)
+      (gnome-shell-session-log)
+    (let ((name "gnome-session")
+          (bus-address nil)
+          (buffer (create-file-buffer " *gnome-session*")))
+
+      (setq gnome-shell--process
+            (start-process
+             name buffer
+             (concat gnome-shell--helper-path "session.sh")
+             "wayland"
+             "'paperwm@hedning:matrix.org'"
+             ))
+
+      (set-process-filter gnome-shell--process
+                          (lambda (process string)
+                            (when (search "unix:abstract" string)
+                              (setq string (substring string 0 (search "\n" string)))
+                              (gnome-shell-set-dbus-address string)
+                              (set-process-filter process nil)))))))
+
+(defun gnome-shell-session-log ()
+  "Show the output of current session"
+  (interactive)
+  (pop-to-buffer (process-buffer gnome-shell--process))
+  (goto-char (point-max)))
 
 ;; --------------------------------------------------------------------------------
 ;; The gnome-shell edit mode, based on js2-mode

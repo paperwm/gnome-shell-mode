@@ -80,6 +80,8 @@ Each entry is either:
         "sr" 'gnome-shell-send-region
         "r" 'gnome-shell-reload
         "R" 'gnome-shell-restart
+        "l" 'gnome-shell-launch-session
+        "L" 'gnome-shell-session-log
         "c" 'gnome-shell-clear-output-at-point
         "oc" 'gnome-shell-clear-output
         "oy" 'gnome-shell-copy-output
