@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-old_display=$DISPLAY
+OLD_DISPLAY=$DISPLAY
 
 d=0
 while [ -e /tmp/.X11-unix/X${d} ]; do
@@ -12,20 +12,18 @@ NEW_DISPLAY=:$d
 export XDG_CONFIG_HOME=${XDG_CACHE_HOME:-$HOME/.cache}/paperwm/.config
 mkdir -p $XDG_CONFIG_HOME
 
-args=()
-
 DISPLAY=$NEW_DISPLAY
 eval $(dbus-launch --exit-with-session --sh-syntax)
 echo $DBUS_SESSION_BUS_ADDRESS
 
-DISPLAY=$old_display
-case "$1" in
-    w*|-w*|--w*)
-        echo 'Running Wayland Gnome Shell'
+TYPE=${1:-$XDG_SESSION_TYPE}
+DISPLAY=$OLD_DISPLAY
+args=()
+case "$TYPE" in
+    wayland)
         args=(--nested --wayland)
         ;;
-    *)
-        echo 'Running X11 Gnome Shell'
+    x11)
         Xephyr $NEW_DISPLAY &
         DISPLAY=$NEW_DISPLAY
         args=--x11

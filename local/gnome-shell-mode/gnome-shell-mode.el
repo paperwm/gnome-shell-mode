@@ -420,16 +420,19 @@ running"
             (start-process
              name buffer
              (concat gnome-shell--helper-path "session.sh")
-             "wayland"
+             ""
              uuid
              ))
 
-      (set-process-filter gnome-shell--process
-                          (lambda (process string)
-                            (when (search "unix:abstract" string)
-                              (setq string (substring string 0 (search "\n" string)))
-                              (gnome-shell-set-dbus-address string)
-                              (set-process-filter process nil)))))))
+      (set-process-filter
+       gnome-shell--process
+       (lambda (process string)
+         (with-current-buffer (process-buffer process)
+           (insert string))
+         (when (search "unix:abstract" string)
+           (setq string (substring string 0 (search "\n" string)))
+           (gnome-shell-set-dbus-address string)
+           (set-process-filter process nil)))))))
 
 (defun gnome-shell-session-log ()
   "Show the output of current session"
