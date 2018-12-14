@@ -160,7 +160,7 @@ NB: don't set directly, use `gnome-shell-set-dbus-address'")
                           (current-column))
                         column)))
     ;; FIXME: When using gnome-shell-repl the flycheck error is cleared for some reason?
-    (flycheck-add-overlay 
+    (flycheck-add-overlay
      (flycheck-error-new-at buf-line buf-column 'error result
                             :id 'gnome-shell-repl-error))))
 
@@ -427,12 +427,35 @@ running"
       (set-process-filter
        gnome-shell--process
        (lambda (process string)
-         (with-current-buffer (process-buffer process)
-           (insert string))
          (when (search "unix:abstract" string)
            (setq string (substring string 0 (search "\n" string)))
-           (gnome-shell-set-dbus-address string)
-           (set-process-filter process nil)))))))
+           (gnome-shell-set-dbus-address string))
+         (when (search "JS ERROR: " string)
+           (gnome-shell--flycheck-log process string))
+         (with-current-buffer (process-buffer process)
+           (goto-char (point-max))
+           (insert string))
+         )))))
+
+(defun gnome-shell--flycheck-log (process string)
+  (let* ((from (+ (search "JS ERROR: " string) 10))
+         (to (search "\n" string :start2 from))
+         (message (substring string from to))
+
+         (from (1+ (search "@" string :start2 to)))
+         (to (search "\n" string :start2 from))
+         (location (substring string from to))
+         (file (replace-regexp-in-string  ":[0-9]*:[0-9]*$" "" location))
+         (loc (split-string (substring location (1+ (length file))) ":"))
+         (buffer (find-buffer-visiting file)))
+    (when buffer
+      (with-current-buffer buffer
+        (flycheck-add-overlay
+         (flycheck-error-new-at
+          (string-to-number (car loc)) (string-to-number (cadr loc))
+          'error message
+          :id 'gnome-shell-log-error))))))
+
 
 (defun gnome-shell-session-log ()
   "Show the output of current session"

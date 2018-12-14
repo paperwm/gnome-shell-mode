@@ -6,7 +6,6 @@ d=0
 while [ -e /tmp/.X11-unix/X${d} ]; do
     d=$((d + 1))
 done
-
 NEW_DISPLAY=:$d
 
 export XDG_CONFIG_HOME=${XDG_CACHE_HOME:-$HOME/.cache}/paperwm/.config
