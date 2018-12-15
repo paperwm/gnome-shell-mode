@@ -410,6 +410,7 @@ running"
   (interactive)
   (if (process-live-p gnome-shell--process)
       (gnome-shell-session-log)
+    (setq gnome-shell--errors nil)
     (gnome-shell-set-dbus-address :session)
     (let ((name "gnome-session")
           (bus-address nil)
@@ -437,6 +438,10 @@ running"
            (insert string))
          )))))
 
+
+(defvar gnome-shell--errors nil
+  "The gnome shell process, if running a nested shell")
+
 (defun gnome-shell--flycheck-log (process string)
   (let* ((from (+ (search "JS ERROR: " string) 10))
          (to (search "\n" string :start2 from))
@@ -447,15 +452,16 @@ running"
          (location (substring string from to))
          (file (replace-regexp-in-string  ":[0-9]*:[0-9]*$" "" location))
          (loc (split-string (substring location (1+ (length file))) ":"))
-         (buffer (find-buffer-visiting file)))
-    (when buffer
-      (with-current-buffer buffer
-        (flycheck-add-overlay
-         (flycheck-error-new-at
-          (string-to-number (car loc)) (string-to-number (cadr loc))
-          'error message
-          :id 'gnome-shell-log-error))))))
+         (buffer (find-buffer-visiting file))
 
+         (err (flycheck-error-new-at
+               (string-to-number (car loc)) (string-to-number (cadr loc))
+               'error message :filename file
+               :id 'gnome-shell-log-error))
+         )
+    (setq gnome-shell--errors (cons err gnome-shell--errors))
+    (when buffer
+      (with-current-buffer buffer (flycheck-add-overlay err)))))
 
 (defun gnome-shell-session-log ()
   "Show the output of current session"
