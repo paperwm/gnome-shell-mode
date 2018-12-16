@@ -40,7 +40,8 @@
 
 ;;; Code:
 
-(require 'cl-lib)
+(eval-when-compile (require 'cl))
+
 (require 'js2-mode)
 (require 'dbus)
 (require 'flycheck)
