@@ -410,7 +410,8 @@ If error:
   "Launch a nested X11/wayland session or show the log if a session is already
 running"
   (interactive)
-  (unless (process-live-p gnome-shell--process)
+  (if (process-live-p gnome-shell--process)
+      (gnome-shell-session-log)
     (flycheck-clear)
     (setq gnome-shell--errors nil)
     (gnome-shell-set-dbus-address :session)
@@ -437,9 +438,9 @@ running"
            (gnome-shell--flycheck-log process string))
          (with-current-buffer (process-buffer process)
            (goto-char (point-max))
-           (insert string)
-           (goto-char (point-max)))))))
-  (gnome-shell-session-log))
+           (insert string))
+         )))))
+
 
 (defvar gnome-shell--errors nil
   "The gnome shell process, if running a nested shell")
@@ -462,8 +463,12 @@ running"
                :id 'gnome-shell-log-error))
          )
     (setq gnome-shell--errors (cons err gnome-shell--errors))
+    (message "file: %s" file)
     (when buffer
-      (with-current-buffer buffer (flycheck-add-overlay err)))))
+      (setf (flycheck-error-buffer err) buffer)
+      (message "set buffer %s" (flycheck-error-buffer err))
+      (with-current-buffer buffer
+        (flycheck-report-current-errors (list err))))))
 
 (defun gnome-shell-session-log ()
   "Show the output of current session"
