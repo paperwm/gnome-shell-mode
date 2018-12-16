@@ -388,23 +388,17 @@ If error:
 (defvar gnome-shell--process nil
   "The gnome shell process, if running a nested shell")
 
-(defun gnome-shell--get-extension-uuid ()
-  (replace-regexp-in-string "\"" "" (alist-get
-    'value
-    (gnome-shell-eval
-     ;; This is pretty ad-hoc and hacky
-     (format
-      "
-      let selfUuid = '%s';
-      let path = '%s';
-      let self = imports.misc.extensionUtils.extensions[selfUuid];
-      let e = self.imports.emacs;
-      let [type, root] = e.findExtensionRoot(path);
-      e.findExtension(root).uuid
-      "
-      "gnome-shell-mode@hedning:matrix.org" (or (buffer-file-name) "")))))
+(defun gnome-shell--get-extension ()
+  (let* ((buffer (current-buffer))
+         (dir (file-name-directory (buffer-file-name buffer))))
+    (while (and (equal dir "/")
+                (not (file-exists-p (concat dir "metadata.json"))))
+      ;; this doesn't make sense, but returns the parent directory
+      (setq dir (file-name-directory (directory-file-name dir))))
+    (message dir)
+    (cons (cons 'root dir)
+          (json-read-file (concat dir "metadata.json")))))
 
-)
 
 (defun gnome-shell-launch-session (&optional wayland extensions)
   "Launch a nested X11/wayland session or show the log if a session is already
@@ -415,18 +409,18 @@ running"
     (flycheck-clear)
     (setq gnome-shell--errors nil)
     (gnome-shell-set-dbus-address :session)
-    (let ((name "gnome-session")
+    (let* ((name "gnome-session")
           (bus-address nil)
           (buffer (create-file-buffer " *gnome-session*"))
-          (uuid (gnome-shell--get-extension-uuid)))
+          (extension (gnome-shell--get-extension))
+          (root (alist-get 'root extension))
+          (uuid (alist-get 'uuid extension)))
 
       (setq gnome-shell--process
             (start-process
              name buffer
              (concat gnome-shell--helper-path "session.sh")
-             ""
-             uuid
-             ))
+             "" root uuid))
 
       (set-process-filter
        gnome-shell--process
@@ -507,7 +501,12 @@ running"
 (define-derived-mode gnome-shell-mode js2-mode "gnome-shell"
   "gnome-shell-mode provides tight integration of emacs and gnome-shell.
 "
-  (use-local-map gnome-shell-mode-map))
+  (use-local-map gnome-shell-mode-map)
+  (dolist (err gnome-shell--errors)
+    (when-let ((buffer (find-buffer-visiting (flycheck-error-filename err))))
+      (when (equal (current-buffer) buffer)
+      (with-current-buffer buffer
+        (flycheck-report-current-errors (list err))))))
 
 
 (provide 'gnome-shell-mode)
