@@ -438,6 +438,18 @@ running"
 (defvar gnome-shell--errors nil
   "The gnome shell process, if running a nested shell")
 
+(defun gnome-shell--add-all-errors ()
+  "Add any existing errors association with buffer's file."
+  (when (and flycheck-mode
+             (equal major-mode 'gnome-shell-mode))
+    ;; Prevent flycheck from killing errors
+    (setq flycheck-check-syntax-automatically nil)
+    (dolist (err gnome-shell--errors)
+      (when-let ((buffer (find-buffer-visiting (flycheck-error-filename err))))
+        (when (equal (current-buffer) buffer)
+          (setf (flycheck-error-buffer err) (current-buffer))
+          (flycheck-report-current-errors (list err)))))))
+
 (defun gnome-shell--flycheck-log (process string)
   (let* ((from (+ (search "JS ERROR: " string) 10))
          (to (search "\n" string :start2 from))
@@ -499,12 +511,13 @@ running"
   "gnome-shell-mode provides tight integration of emacs and gnome-shell.
 "
   (use-local-map gnome-shell-mode-map)
-  (dolist (err gnome-shell--errors)
-    (when-let ((buffer (find-buffer-visiting (flycheck-error-filename err))))
-      (when (equal (current-buffer) buffer)
-      (with-current-buffer buffer
-        (flycheck-report-current-errors (list err))))))
 
+  (add-hook
+   'flycheck-mode-hook
+   #'gnome-shell--add-all-errors)
+
+  (add-hook 'gnome-shell-mode-hook
+            #'flycheck-mode))
 
 (provide 'gnome-shell-mode)
 
