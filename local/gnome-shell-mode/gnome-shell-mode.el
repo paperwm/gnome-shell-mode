@@ -411,6 +411,7 @@ If error:
 running"
   (interactive)
   (unless (process-live-p gnome-shell--process)
+    (flycheck-clear)
     (setq gnome-shell--errors nil)
     (gnome-shell-set-dbus-address :session)
     (let ((name "gnome-session")
