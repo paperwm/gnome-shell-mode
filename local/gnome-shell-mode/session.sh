@@ -2,20 +2,28 @@
 
 OLD_DISPLAY=$DISPLAY
 
+TYPE=${1:-$XDG_SESSION_TYPE}; shift
+ROOT=$1; shift
+UUID=$1; shift
+
 d=0
 while [ -e /tmp/.X11-unix/X${d} ]; do
     d=$((d + 1))
 done
 NEW_DISPLAY=:$d
 
-export XDG_CONFIG_HOME=${XDG_CACHE_HOME:-$HOME/.cache}/paperwm/.config
-mkdir -p $XDG_CONFIG_HOME
+CACHE=${XDG_CACHE_HOME:-$HOME/.cache}/${UUID}${SUFFIX}
+mkdir -p $CACHE
+export XDG_CONFIG_HOME=${CACHE}/config
+export XDG_DATA_HOME=${CACHE}/local
+mkdir -p $XDG_DATA_HOME/gnome-shell/extensions
+ln -fs $ROOT $XDG_DATA_HOME/gnome-shell/extensions/${UUID}
+export XDG_CACHE_HOME=${CACHE}/cache
 
 DISPLAY=$NEW_DISPLAY
 eval $(dbus-launch --exit-with-session --sh-syntax)
 echo $DBUS_SESSION_BUS_ADDRESS
 
-TYPE=${1:-$XDG_SESSION_TYPE}
 DISPLAY=$OLD_DISPLAY
 args=()
 case "$TYPE" in
@@ -28,10 +36,9 @@ case "$TYPE" in
         args=--x11
         ;;
 esac
-shift
 
-dconf reset -f /  # Reset settings
-dconf write /org/gnome/shell/enabled-extensions "['$1']"
+# dconf reset -f /  # Reset settings
+dconf write /org/gnome/shell/enabled-extensions "['${UUID}']"
 
 export CLUTTER_SHOW_FPS=1
 export SHELL_DEBUG=all
