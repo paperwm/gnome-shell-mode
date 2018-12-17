@@ -1,3 +1,4 @@
+;;; comany-gnome-shell-mode.el --- completion -*- lexical-binding: t -*-
 
 (require 'gnome-shell-mode)
 (require 'company)
