@@ -40,6 +40,8 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'rx))
+
 (require 'js2-mode)
 (require 'dbus)
 (require 'flycheck)
@@ -457,23 +459,25 @@ running"
           (flycheck-report-current-errors (list err)))))))
 
 (defun gnome-shell--flycheck-log (process string)
-  (let* ((from (+ (string-match "JS ERROR: \\([^\n]*\\)$" string) 10))
-         (to (match-end 0))
+  (let* ((m (string-match (rx "JS ERROR: " (group (+ nonl)) line-end) string))
          (message (match-string 1 string))
+         (next (match-end 0))
 
-
-         (from (1+ (string-match "@" string to)))
-         (to (string-match "\n" string from))
-         (location (substring string from to))
-         (file (replace-regexp-in-string  ":[0-9]*:[0-9]*$" "" location))
-         (loc (split-string (substring location (1+ (length file))) ":"))
+         (loc-regex (rx "@" (group (+? nonl)) ;; filename
+                         ":" (group (+ num)) ;; line nr.
+                         (? ":") (group (* num)) line-end)) ;; col nr.
+         (m (string-match loc-regex string next))
+         (file (match-string 1 string))
          (buffer (find-buffer-visiting file))
-
+         ;; We should always have a line
+         (line (string-to-number (match-string 2 string)))
+         ;; But not always a column
+         (column (when (match-string 3 string)
+                   (string-to-number(match-string 3 string))))
          (err (flycheck-error-new-at
-               (string-to-number (car loc)) (string-to-number (cadr loc))
+               line column
                'error message :filename file
-               :id 'gnome-shell-log-error))
-         )
+               :id 'gnome-shell-log-error)))
     (setq gnome-shell--errors (cons err gnome-shell--errors))
     (message "file: %s" file)
     (when buffer
