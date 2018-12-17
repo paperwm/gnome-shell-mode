@@ -403,8 +403,7 @@ If error:
   "Launch a nested X11/wayland session or show the log if a session is already
 running"
   (interactive)
-  (if (process-live-p gnome-shell--process)
-      (gnome-shell-session-log)
+  (unless (process-live-p gnome-shell--process)
     (flycheck-clear)
     (setq gnome-shell--errors nil)
     (gnome-shell-set-dbus-address :session)
@@ -431,8 +430,10 @@ running"
            (gnome-shell--flycheck-log process string))
          (with-current-buffer (process-buffer process)
            (goto-char (point-max))
-           (insert string))
-         )))))
+           (insert string))))))
+
+  ;; Always show the log when launching
+  (gnome-shell-session-log))
 
 
 (defvar gnome-shell--errors nil
