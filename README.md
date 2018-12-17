@@ -34,6 +34,14 @@ There's two non-standard keybindings:
 - <kbd>Return</kbd> will evaluate the active region (if evil is used), the result will be shown in the minibuffer.
 - <kbd>C-Return</kbd> will evaluate the active region, or the current line if there's no region active. The result will be added in an overlay ala. magit-blame. The overlay can be cleared by <kbd>,c</kbd> or by deleting the input.
 
+### Launch session
+
+By default gnome-shell-mode connects to the live Gnome Shell session. This can be a bit risky however, especially on Wayland where restart doesn't work.
+
+Run `M-x gnome-shell-launch-session`, (`, l` if using spacemacs), to launch and connect to a nested session, the session's log will popup in a new buffer too. When a session is already running `, l`  will simply take you to the log. To launch a clean session close the nested Gnome Shell window first.
+
+If the nested session encounter runtime errors they will be reported as errors in the correct buffer (using flycheck).
+
 ### Reload
 
 The mode supports reloading buffers with <kbd>, r</kbd>. This works by first disabling the extension, re-evaluating the whole buffer in the correct scope, and then enabling the extension again.

@@ -479,8 +479,7 @@ running"
 (defun gnome-shell-session-log ()
   "Show the output of current session"
   (interactive)
-  (pop-to-buffer (process-buffer gnome-shell--process))
-  (goto-char (point-max)))
+  (pop-to-buffer (process-buffer gnome-shell--process)))
 
 ;; --------------------------------------------------------------------------------
 ;; The gnome-shell edit mode, based on js2-mode
