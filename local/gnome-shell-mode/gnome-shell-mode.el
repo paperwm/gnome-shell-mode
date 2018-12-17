@@ -40,7 +40,7 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'rx))
 
 (require 'js2-mode)
 (require 'dbus)
@@ -430,10 +430,10 @@ running"
          (with-current-buffer (process-buffer process)
            (goto-char (point-max))
            (insert string))
-         (when (search "unix:abstract" string)
-           (setq string (substring string 0 (search "\n" string)))
+         (when (string-match "unix:abstract" string)
+           (setq string (substring string 0 (string-match "\n" string)))
            (gnome-shell-set-dbus-address string))
-         (when (search "JS ERROR: " string)
+         (when (string-match "JS ERROR: " string)
            (gnome-shell--flycheck-log process string))))))
 
   ;; Always show the log when launching
@@ -456,22 +456,25 @@ running"
           (flycheck-report-current-errors (list err)))))))
 
 (defun gnome-shell--flycheck-log (process string)
-  (let* ((from (+ (search "JS ERROR: " string) 10))
-         (to (search "\n" string :start2 from))
-         (message (substring string from to))
+  (let* ((m (string-match (rx "JS ERROR: " (group (+ nonl)) line-end) string))
+         (message (match-string 1 string))
+         (next (match-end 0))
 
-         (from (1+ (search "@" string :start2 to)))
-         (to (search "\n" string :start2 from))
-         (location (substring string from to))
-         (file (replace-regexp-in-string  ":[0-9]*:[0-9]*$" "" location))
-         (loc (split-string (substring location (1+ (length file))) ":"))
+         (loc-regex (rx "@" (group (+? nonl)) ;; filename
+                         ":" (group (+ num)) ;; line nr.
+                         (? ":") (group (* num)) line-end)) ;; col nr.
+         (m (string-match loc-regex string next))
+         (file (match-string 1 string))
          (buffer (find-buffer-visiting file))
-
+         ;; We should always have a line
+         (line (string-to-number (match-string 2 string)))
+         ;; But not always a column
+         (column (when (match-string 3 string)
+                   (string-to-number(match-string 3 string))))
          (err (flycheck-error-new-at
-               (string-to-number (car loc)) (string-to-number (cadr loc))
+               line column
                'error message :filename file
-               :id 'gnome-shell-log-error))
-         )
+               :id 'gnome-shell-log-error)))
     (setq gnome-shell--errors (cons err gnome-shell--errors))
     (when buffer
       (setf (flycheck-error-buffer err) buffer)
