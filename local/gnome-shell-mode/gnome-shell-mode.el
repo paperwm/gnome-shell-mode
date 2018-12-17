@@ -428,14 +428,14 @@ running"
       (set-process-filter
        gnome-shell--process
        (lambda (process string)
+         (with-current-buffer (process-buffer process)
+           (goto-char (point-max))
+           (insert string))
          (when (search "unix:abstract" string)
            (setq string (substring string 0 (search "\n" string)))
            (gnome-shell-set-dbus-address string))
          (when (search "JS ERROR: " string)
-           (gnome-shell--flycheck-log process string))
-         (with-current-buffer (process-buffer process)
-           (goto-char (point-max))
-           (insert string))))))
+           (gnome-shell--flycheck-log process string))))))
 
   ;; Always show the log when launching
   (gnome-shell-session-log))
