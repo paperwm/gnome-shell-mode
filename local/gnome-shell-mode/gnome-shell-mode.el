@@ -40,8 +40,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
 (require 'js2-mode)
 (require 'dbus)
 (require 'flycheck)
@@ -431,10 +429,10 @@ running"
          (with-current-buffer (process-buffer process)
            (goto-char (point-max))
            (insert string))
-         (when (search "unix:abstract" string)
-           (setq string (substring string 0 (search "\n" string)))
+         (when (string-match "unix:abstract" string)
+           (setq string (substring string 0 (string-match "\n" string)))
            (gnome-shell-set-dbus-address string))
-         (when (search "JS ERROR: " string)
+         (when (string-match "JS ERROR: " string)
            (gnome-shell--flycheck-log process string))))))
 
   ;; Always show the log when launching
@@ -459,12 +457,13 @@ running"
           (flycheck-report-current-errors (list err)))))))
 
 (defun gnome-shell--flycheck-log (process string)
-  (let* ((from (+ (search "JS ERROR: " string) 10))
-         (to (search "\n" string :start2 from))
-         (message (substring string from to))
+  (let* ((from (+ (string-match "JS ERROR: \\([^\n]*\\)$" string) 10))
+         (to (match-end 0))
+         (message (match-string 1 string))
 
-         (from (1+ (search "@" string :start2 to)))
-         (to (search "\n" string :start2 from))
+
+         (from (1+ (string-match "@" string to)))
+         (to (string-match "\n" string from))
          (location (substring string from to))
          (file (replace-regexp-in-string  ":[0-9]*:[0-9]*$" "" location))
          (loc (split-string (substring location (1+ (length file))) ":"))
