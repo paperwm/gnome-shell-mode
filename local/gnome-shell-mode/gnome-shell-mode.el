@@ -1,4 +1,4 @@
-;;; gnome-shell-mode.el --- Tight integration of emacs with gnome-shell
+;;; gnome-shell-mode.el --- Tight integration of emacs with gnome-shell -*- lexical-binding: t -*-
 
 ;; Based on notion-wm-mode which again is loosely based on notion.el by Stefan
 ;; Reichör
