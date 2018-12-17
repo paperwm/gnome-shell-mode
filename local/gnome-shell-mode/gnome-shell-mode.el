@@ -1,12 +1,12 @@
 ;;; gnome-shell-mode.el --- Tight integration of emacs with gnome-shell
 
 ;; Based on notion-wm-mode which again is loosely based on notion.el by Stefan
-;; Reichör
+;; ReichÃ¶r
 
 ;; Filename: gnome-shell-mode.el
 ;; Authors:
-;; - Tor Hedin Brønner <torhedinbronner@gmail.com>
-;; - Ole Jørgen Brønner <olejorgenb@yahoo.no>
+;; - Tor Hedin BrÃ¸nner <torhedinbronner@gmail.com>
+;; - Ole JÃ¸rgen BrÃ¸nner <olejorgenb@yahoo.no>
 
 ;; gnome-shell-mode.el is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -331,17 +331,6 @@ If error:
   ;; FIXME: respect insert-result and interactively arguments
   (gnome-shell-eval cmd))
 
-
-(defun gnome-shell-client-list ()
-  "Return the list of the managed clients"
-  (throw "not implemented yet"))
-
-
-(defun gnome-shell-goto-client (name)
-  ;;(interactive (list (ido-completing-read "select: " '("a" "aaab" "a/b" "a/b/c" "x/z"))))
-  (interactive (list (ido-completing-read "select: " (gnome-shell-client-list))))
-  (throw "not implemented yet"))
-
 (defun gnome-shell--lookup-symbol-candidates (partial-symbol)
   ;; Endpoint source: https://git.gnome.org/browse/library-web/tree/web/api.py
   (let ((query (concat gnome-symbol-query-url "lookup/" partial-symbol "?")))
@@ -518,7 +507,6 @@ running"
                     ["Send String" gnome-shell-send-string t]
                     ["Send Line" gnome-shell-send-line t]
                     )
-                    ["Goto client" gnome-shell-goto-client t]
                     ))
 
 (define-derived-mode gnome-shell-mode js2-mode "gnome-shell"
@@ -536,7 +524,3 @@ running"
 (provide 'gnome-shell-mode)
 
 ;;; gnome-shell-mode.el ends here
-
-;; arch-tag: 17c5fcf9-ea23-4ca5-b7d5-a0635b8b4230
-
-
