@@ -404,7 +404,11 @@ If error:
 running"
   (interactive)
   (unless (process-live-p gnome-shell--process)
-    (flycheck-clear)
+    (dolist (err gnome-shell--errors)
+      (when-let ((filename (flycheck-error-filename err))
+                 (buffer (find-buffer-visiting filename)))
+        (with-current-buffer buffer
+          (flycheck-clear))))
     (setq gnome-shell--errors nil)
     (gnome-shell-set-dbus-address :session)
     (let* ((name "gnome-session")
