@@ -408,7 +408,7 @@ running"
       (when-let ((filename (flycheck-error-filename err))
                  (buffer (find-buffer-visiting filename)))
         (with-current-buffer buffer
-          (flycheck-clear))))
+          (flycheck-teardown))))
     (setq gnome-shell--errors nil)
     (gnome-shell-set-dbus-address :session)
     (let* ((name "gnome-session")
