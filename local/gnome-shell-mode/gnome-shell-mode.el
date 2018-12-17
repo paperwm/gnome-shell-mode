@@ -429,8 +429,14 @@ running"
        gnome-shell--process
        (lambda (process string)
          (with-current-buffer (process-buffer process)
-           (goto-char (point-max))
-           (insert string))
+           (let ((scroll nil))
+             (save-excursion
+               (end-of-line)
+               (setq scroll (eobp))
+               (goto-char (point-max))
+               (insert string))
+             (when scroll
+               (goto-char (point-max)))))
          (when (string-match "unix:abstract" string)
            (setq string (substring string 0 (string-match "\n" string)))
            (gnome-shell-set-dbus-address string))
