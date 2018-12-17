@@ -380,8 +380,8 @@ If error:
 (defun gnome-shell--get-extension ()
   (let* ((buffer (current-buffer))
          (dir (file-name-directory (buffer-file-name buffer))))
-    (while (and (equal dir "/")
-                (not (file-exists-p (concat dir "metadata.json"))))
+    (while (not (or (equal dir "/")
+                    (file-exists-p (concat dir "metadata.json"))))
       ;; this doesn't make sense, but returns the parent directory
       (setq dir (file-name-directory (directory-file-name dir))))
     (cons (cons 'root dir)
