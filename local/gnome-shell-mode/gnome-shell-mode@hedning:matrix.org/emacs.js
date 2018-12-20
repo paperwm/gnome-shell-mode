@@ -252,7 +252,8 @@ function getStatementMoz60(lines, statement) {
     case 'FunctionExpression':
     case 'FunctionDeclaration':
         var g = statement.generator ? '*' : '';
-        return `function${g} ${span(lines, statement.loc)}`;
+        var a = statement.async ? 'async ' : '';
+        return `${a}function${g} ${span(lines, statement.loc)}`;
 
     case  'ArrowFunctionExpression':
         // statement.loc produces things like `= () => {}`
@@ -323,7 +324,8 @@ function getStatementMoz52(lines, statement) {
     case 'FunctionExpression':
     case 'FunctionDeclaration':
         var g = statement.generator ? '*' : '';
-        return `function${g} ${span(lines, statement.loc)}`;
+        var a = statement.async ? 'async ' : '';
+        return `${a}function${g} ${span(lines, statement.loc)}`;
 
     case  'ClassExpression':
     case 'ClassStatement':
