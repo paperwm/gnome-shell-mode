@@ -323,7 +323,7 @@ function getStatementMoz52(lines, statement) {
 
     case 'FunctionExpression':
     case 'FunctionDeclaration':
-        var g = statement.generator ? '*' : '';
+        var g = (statement.generator && !statement.async) ? '*' : '';
         var a = statement.async ? 'async ' : '';
         return `${a}function${g} ${span(lines, statement.loc)}`;
 
