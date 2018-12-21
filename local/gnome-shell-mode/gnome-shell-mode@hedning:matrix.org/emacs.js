@@ -469,19 +469,21 @@ function Eval(code, path) {
             // Let eval take care of syntax errors too
         }
         evalResult =  (0, eval)(`with(emacs.module){ ${code} }`);
+        window.$ = evalResult;
+
         result = {
             success: true,
         };
 
         try {
             result.value = prettyPrint(evalResult)
-
         } catch(e) {
             result.value = "Error during pretty printing: " + e.message;
         }
 
     } catch(e) {
-        // Note: JSON.stringify(e) doesn't reliably include all fields
+        window.$ = e;
+
         if (sourceMap) {
             // lineNumber is one indexed, and sourceMap expect zero indexing
             // it also returns a zero indexed line, so we need to add 1.
@@ -496,7 +498,6 @@ function Eval(code, path) {
             // e.constructor
             file: e.file
         }
-        emacs.lasterr = e; // for debugging
 
         success = false;
     }

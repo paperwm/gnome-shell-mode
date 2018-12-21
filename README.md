@@ -34,6 +34,8 @@ There's two non-standard keybindings:
 - <kbd>Return</kbd> will evaluate the active region (if evil is used), the result will be shown in the minibuffer.
 - <kbd>C-Return</kbd> will evaluate the active region, or the current line if there's no region active. The result will be added in an overlay ala. magit-blame. The overlay can be cleared by <kbd>,c</kbd> or by deleting the input.
 
+The global variable `$` contains the value of the most recent evaluation.
+
 ### Launch session
 
 By default gnome-shell-mode connects to the live Gnome Shell session. This can be a bit risky however, especially on Wayland where restart doesn't work.
