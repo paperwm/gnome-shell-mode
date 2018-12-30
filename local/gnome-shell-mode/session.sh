@@ -12,6 +12,8 @@ while [ -e /tmp/.X11-unix/X${d} ]; do
 done
 NEW_DISPLAY=:$d
 
+XDG_RUNTIME_DIR=$(mktemp -d)
+
 CACHE=${XDG_CACHE_HOME:-$HOME/.cache}/${UUID}${SUFFIX}
 mkdir -p $CACHE
 export XDG_CONFIG_HOME=${CACHE}/config
