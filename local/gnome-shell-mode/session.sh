@@ -45,4 +45,7 @@ dconf write /org/gnome/shell/enabled-extensions "['${UUID}']"
 export CLUTTER_SHOW_FPS=1
 export SHELL_DEBUG=all
 export MUTTER_DEBUG=1
+export MUTTER_DEBUG_NUM_DUMMY_MONITORS=1
+export MUTTER_DEBUG_DUMMY_MONITOR_SCALES=1
+export MUTTER_DEBUG_TILED_DUMMY_MONITORS=1
 gnome-shell ${args[*]} 2>&1 | sed 's/\x1b\[[0-9;]*m//g'
