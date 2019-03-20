@@ -98,6 +98,6 @@ Reassignment relies on SpiderMonkey's built in parser. We traverse the top level
 
 ## Caveats
 
-Not all methods of GObjects (g-object-introspected classes) complete before they're used the first time. This include a lot of classes you'll interact with. eg. `MetaWindow`. We're unsure how to fix this. Suggestions are welcome.
+Not all methods of GObjects (g-object-introspected classes) complete before they're used the first time. This include a lot of classes you'll interact with. eg. `MetaWindow`. Fixed in [gjs 1.55.1](https://gitlab.gnome.org/GNOME/gjs/commit/8e982d37e9fd9adcf9e87573d91cbffaf1e7b509)
 
 While gnome-shell-mode shouldn't cause any crashes by itself, evaluating javascript in Gnome Shell is not completely safe, some code will result in a crash. Eg. looking up a non-existing dconf/schema name will cause a crash.
