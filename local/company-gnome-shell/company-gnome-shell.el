@@ -1,4 +1,16 @@
-;;; comany-gnome-shell-mode.el --- completion -*- lexical-binding: t -*-
+;;; company-gnome-shell.el --- Gnome Shell runtime js completion  -*- lexical-binding: t -*-
+
+;; Copyright (C) 2017-2019 Tor Hedin Brønner and Ole Jørgen Brønner
+
+;; Author: Tor Hedin Brønner <torhedinbronner@gmail.com>
+;;      Ole Jørgen Brønner <olejorgenb@yahoo.no>
+;; Homepage: https://github.com/paperwm/gnome-shell-mode
+;; Version: 0.1
+;; Package-Requires: ((emacs "24") (company "20181105") (gnome-shell-mode "0.1"))
+
+;; This file is not part of GNU Emacs
+
+;;; Code:
 
 (require 'gnome-shell-mode)
 (require 'company)
@@ -21,6 +33,7 @@
 
 (defun company-gnome-shell (command &optional arg &rest ignored)
   (interactive (list 'interactive))
+  (message "%s" command)
   (cl-case command
     (interactive (company-begin-backend 'company-gnome-shell))
     (prefix (company-gnome-shell--prefix))
@@ -29,3 +42,5 @@
     (sorted nil)))
 
 (provide 'company-gnome-shell)
+
+;;; company-gnome-shell.el ends here
