@@ -4,7 +4,9 @@ gnome-shell-mode makes it easy to interactively explore and evaluate javascript 
 
 ## Installation
 
-There's no melpa package yet, but it's quite easy to use the layer with Spacemacs.
+There's no melpa package yet, but it's quite easy to install the package(s) manually.
+
+### Spacemacs 
 
 Clone the repo and create a symlink named `gnome-shell` in the spacemacs `private` folder:
 ```shell
@@ -23,6 +25,27 @@ Add gnome-shell to your list of Spacemacs layers:
 ```
 
 Restart emacs and you're ready to go.
+
+### Vanilla emacs
+
+Add both `local/gnome-shell-mode` and `local/company-gnome-shell` to the `load-path`.
+
+Then add this to `init.el`:
+
+```emacs-lisp
+    (require 'company)
+
+    (require 'gnome-shell-mode)
+    (require 'company-gnome-shell)
+    
+    ;; Most staight forward but might mess up company in other modes?
+    (eval-after-load "company"
+     (add-to-list 'company-backends 'company-gnome-shell))
+```
+
+See `gnome-shell-mode-pkg.el` and `company-gnome-shell.el` for list of dependencies.
+
+NB: The rest of the readme describe the keybindings defined by the spacemacs layer. Some vanilla emacs bindings are also defined by default. See the bottom of `gnome-shell-mode.el`. 
 
 ## Usage
 
