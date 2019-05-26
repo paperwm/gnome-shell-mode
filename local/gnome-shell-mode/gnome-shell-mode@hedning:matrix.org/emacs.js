@@ -250,6 +250,9 @@ function getStatementMoz60(lines, statement) {
     switch (statement.type) {
 
     case 'FunctionExpression':
+        var a = statement.async ? 'async ' : '';
+        return `${a} ${span(lines, statement.loc)}`;
+
     case 'FunctionDeclaration':
         var g = statement.generator ? '*' : '';
         var a = statement.async ? 'async ' : '';
@@ -322,6 +325,9 @@ function getStatementMoz52(lines, statement) {
         return `for (${left} of ${right}) ${body}`;
 
     case 'FunctionExpression':
+        var a = statement.async ? 'async ' : '';
+        return `${a} ${span(lines, statement.loc)}`;
+
     case 'FunctionDeclaration':
         var g = (statement.generator && !statement.async) ? '*' : '';
         var a = statement.async ? 'async ' : '';
