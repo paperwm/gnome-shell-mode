@@ -19,7 +19,7 @@ mkdir -p $CACHE
 export XDG_CONFIG_HOME=${CACHE}/config
 export XDG_DATA_HOME=${CACHE}/local
 mkdir -p $XDG_DATA_HOME/gnome-shell/extensions
-ln -fs $ROOT $XDG_DATA_HOME/gnome-shell/extensions/${UUID}
+ln -fsn $ROOT $XDG_DATA_HOME/gnome-shell/extensions/${UUID}
 export XDG_CACHE_HOME=${CACHE}/cache
 
 DISPLAY=$NEW_DISPLAY
