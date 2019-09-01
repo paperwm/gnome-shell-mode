@@ -1,5 +1,10 @@
 const uuid = "gnome-shell-mode@hedning:matrix.org";
-const Extension = imports.misc.extensionUtils.extensions[uuid];
+var Extension;
+if (imports.misc.extensionUtils.extensions) {
+    Extension = imports.misc.extensionUtils.extensions[uuid];
+} else {
+    Extension = imports.ui.main.extensionManager.lookup(uuid);
+}
 const Emacs = Extension.imports.emacs;
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;

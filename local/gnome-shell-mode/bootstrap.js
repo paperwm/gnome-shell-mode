@@ -1,8 +1,15 @@
 (function (path) {
     const Gio = imports.gi.Gio;
-    const extensionUtils = imports.misc.extensionUtils;
-    const extensionSystem = imports.ui.extensionSystem;
-    const ExtensionFinder = new extensionUtils.ExtensionFinder();
+    let extensionUtils;
+    let extensionSystem;
+    // Work around differences between 3.32 and 3.34
+    if (imports.misc.extensionUtils.createExtensionObject) {
+        extensionSystem = imports.ui.extensionSystem;
+        extensionUtils = imports.misc.extensionUtils;
+    } else {
+        extensionSystem = imports.ui.main.extensionManager;
+        extensionUtils = extensionSystem;
+    }
 
     const uuid = "gnome-shell-mode@hedning:matrix.org";
     let dir = Gio.File.new_for_path(`${path}${uuid}`);

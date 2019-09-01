@@ -587,7 +587,11 @@ function findExtension(projectRoot) {
         let uuid = JSON.parse(metadata.toString()).uuid;
         if (uuid === undefined)
             return false;
-        return imports.misc.extensionUtils.extensions[uuid];
+        if (imports.misc.extensionUtils.extensions) {
+            return imports.misc.extensionUtils.extensions[uuid];
+        } else {
+            return imports.ui.main.extensionManager.lookup(uuid);
+        }
     }
 }
 
