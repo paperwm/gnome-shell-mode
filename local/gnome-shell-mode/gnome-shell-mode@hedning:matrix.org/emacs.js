@@ -16,7 +16,15 @@ function verboseLog() {
 /// Add custom printers here indexed by constructor name
 // (obj, key) => String or primitive to be serialized further to JSON
 // `key` is undefined if top-level object
+// IMPROVEMENT: Use a proper map instead and the actual constructors as keys..
+// IMPROVEMENT: What about inheritance? Follow superclasses until a pp is found?
 let prettyPrinters = {};
+
+function ppListing(list) {
+    // IMPROVEMENT: use single line for short enough entries
+    // IMPROVEMENT: what about nested listings.. (accept an indent level)
+    return "{\n   " + list.join(",\n   ") + "\n}";
+}
 
 function ppRect(xywh) {
     let [x,y,w,h] = xywh.map( v => v.toFixed(1) );
@@ -50,6 +58,24 @@ prettyPrinters["Clutter_ActorBox"] = function(box, key) {
 prettyPrinters["Meta_Rectangle"] = function(box, key) {
     return `Meta_Rectangle ${ppRect([box.x, box.y, box.width, box.height])}`;
 
+}
+
+prettyPrinters["Set"] = function(set, key) {
+    let members = [];
+    for (let m of set) {
+        // WEAKNESS: ppObject doesn't put quotes around strings, so strings and numbers is not distinguishable
+        members.push("  " + ppObject(m));
+    }
+    return "set " + ppListing(members);
+}
+
+prettyPrinters["Map"] = function(map, key) {
+    let entries = [];
+    for (let [k, v] of map) {
+        // WEAKNESS: ppObject doesn't put quotes around strings, so strings and numbers is not distinguishable
+        entries.push(`${k.toString()} -> ${ppObject(v)}`);
+    }
+    return "map " + ppListing(entries);
 }
 
 function ppObject(obj, key) {
