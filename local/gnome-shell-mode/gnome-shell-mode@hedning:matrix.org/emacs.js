@@ -176,7 +176,6 @@ function hasConstuctor(obj, exactConstructor) {
     }
 }
 
-// emacs.prettyPrint = prettyPrint
 function prettyPrint(obj) {
     if (obj !== null && typeof(obj) === "object"
         && (hasConstuctor(obj, Object) || hasConstuctor(obj, Array)))
@@ -278,7 +277,7 @@ function getStatementMoz60(lines, statement) {
 
     case 'FunctionExpression':
         var a = statement.async ? 'async ' : '';
-        return `${a}function ${span(lines, statement.loc)}`;
+        return `${a} ${span(lines, statement.loc)}`;
 
     case 'FunctionDeclaration':
         var g = statement.generator ? '*' : '';
@@ -353,7 +352,7 @@ function getStatementMoz52(lines, statement) {
 
     case 'FunctionExpression':
         var a = statement.async ? 'async ' : '';
-        return `${a}function ${span(lines, statement.loc)}`;
+        return `${a} ${span(lines, statement.loc)}`;
 
     case 'FunctionDeclaration':
         var g = (statement.generator && !statement.async) ? '*' : '';

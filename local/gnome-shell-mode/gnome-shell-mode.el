@@ -385,12 +385,8 @@ If error:
                     (file-exists-p (concat dir "metadata.json"))))
       ;; this doesn't make sense, but returns the parent directory
       (setq dir (file-name-directory (directory-file-name dir))))
-    (if (equal dir "/")
-        (list (cons 'root (file-name-directory (buffer-file-name buffer)))
-              (cons 'uuid ""))
-      (cons (cons 'root dir)
-            (json-read-file (concat dir "metadata.json")))
-        )))
+    (cons (cons 'root dir)
+          (json-read-file (concat dir "metadata.json")))))
 
 
 (defun gnome-shell-launch-session (&optional wayland extensions)
