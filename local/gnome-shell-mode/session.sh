@@ -42,7 +42,7 @@ esac
 # dconf reset -f /  # Reset settings
 dconf write /org/gnome/shell/enabled-extensions "['${UUID}']"
 
-export CLUTTER_SHOW_FPS=1
+# export CLUTTER_SHOW_FPS=1
 export SHELL_DEBUG=all
 export MUTTER_DEBUG=1
 export MUTTER_DEBUG_NUM_DUMMY_MONITORS=1
