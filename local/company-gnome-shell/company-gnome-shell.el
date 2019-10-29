@@ -33,7 +33,6 @@
 
 (defun company-gnome-shell (command &optional arg &rest ignored)
   (interactive (list 'interactive))
-  (message "%s" command)
   (cl-case command
     (interactive (company-begin-backend 'company-gnome-shell))
     (prefix (company-gnome-shell--prefix))
