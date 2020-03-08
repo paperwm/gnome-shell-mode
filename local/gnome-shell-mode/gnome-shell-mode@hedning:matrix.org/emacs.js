@@ -708,6 +708,15 @@ function completionCandidates(text, path) {
 
         completions = completions.concat(JsParse.getAllProps(baseObj));
 
+        if (baseObj.constructor === imports.gi.GIRepository.constructor) {
+            const repo = imports.gi.GIRepository.Repository.get_default();
+            const namespace = baseObj.__name__;
+            const n = repo.get_n_infos(namespace);
+            for (let i = 0; i < n; i++) {
+                completions.push(repo.get_info(namespace, i).get_name());
+            }
+        }
+
         if (isGObject(baseObj)) {
             // NB: emacs.list_properties.call(x) crashes gnome-shell when x is a
             //     (non-empty) string or number
