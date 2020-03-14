@@ -708,7 +708,7 @@ function completionCandidates(text, path) {
 
         completions = completions.concat(JsParse.getAllProps(baseObj));
 
-        if (baseObj.constructor === imports.gi.GIRepository.constructor) {
+        if (Object.getPrototypeOf(baseObj).constructor === imports.gi.GIRepository.constructor) {
             const repo = imports.gi.GIRepository.Repository.get_default();
             const namespace = baseObj.__name__;
             const n = repo.get_n_infos(namespace);
