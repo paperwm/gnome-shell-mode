@@ -706,6 +706,10 @@ function completionCandidates(text, path) {
             return [];
         }
 
+        if (baseObj === null || baseObj === undefined) {
+            return [];
+        }
+
         completions = completions.concat(JsParse.getAllProps(baseObj));
 
         if (Object.getPrototypeOf(baseObj).constructor === imports.gi.GIRepository.constructor) {
