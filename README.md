@@ -6,6 +6,75 @@ gnome-shell-mode makes it easy to interactively explore and evaluate javascript 
 
 There's no melpa package yet, but it's quite easy to install the package(s) manually.
 
+### Doom emacs
+
+In your `packages.el`:
+
+```emacs-lisp
+(package! gnome-shell-mode
+  :recipe (:host github :repo "paperwm/gnome-shell-mode"
+           :files ("local/gnome-shell-mode/*")))
+(package! company-gnome-shell
+  :recipe (:host github :repo "paperwm/gnome-shell-mode"
+           :files ("local/company-gnome-shell/*.el")))
+```
+
+and in your `config.el`:
+
+```emacs-lisp
+(use-package! gnome-shell-mode
+  :defer t
+  :commands (gnome-shell-mode)
+  :config
+  (setq-hook! 'gnome-shell-mode-hook
+    mode-name "GJS")
+
+  (map!
+   :map gnome-shell-mode-map
+   :v "<return>" 'gnome-shell-send-region
+   :gvni "C-<return>" 'gnome-shell-repl
+
+   :map gnome-shell-mode-map
+   :localleader
+   :gnv :desc "Reload buffer" "r" 'gnome-shell-reload
+   :desc "Reload session" "R" 'gnome-shell-restart
+   :desc "Launch session" "l" 'gnome-shell-launch-session
+   :desc "Clear output" "c" 'gnome-shell-clear-output-at-point
+
+   (:prefix ("g" . "jump")
+     :desc "Jump to definition" "g" '+lookup/definition)
+
+   (:prefix ("s" . "eval in session")
+     :desc "Eval buffer" "b" 'gnome-shell-send-buffer
+     :desc "Eval function" "f" 'gnome-shell-send-proc
+     :desc "Eval function" "d" 'gnome-shell-send-proc
+     :desc "Eval line" "l" 'gnome-shell-send-current-line
+     :desc "Eval region" "r" 'gnome-shell-send-region)
+
+   (:prefix ("e" . "eval in session")
+     :desc "Eval buffer" "b" 'gnome-shell-send-buffer
+     :desc "Eval function" "f" 'gnome-shell-send-proc
+     :desc "Eval function" "d" 'gnome-shell-send-proc
+     :desc "Eval line" "l" 'gnome-shell-send-current-line
+     :desc "Eval region" "r" 'gnome-shell-send-region)
+
+   (:prefix ("o" . "output")
+     :desc "Clear all output" "c" 'gnome-shell-clear-output
+     :desc "Copy output" "y" 'gnome-shell-copy-output)
+
+   (:prefix ("h" . "help")
+     :desc "Lookup at point" "h" 'gnome-shell-look-up-function-at-point
+     )
+   )
+  )
+
+(use-package! company-gnome-shell
+  :defer t
+  :commands (company-gnome-shell)
+  :init
+  (set-company-backend! 'gnome-shell-mode 'company-gnome-shell))
+```
+
 ### Spacemacs 
 
 Clone the repo and create a symlink named `gnome-shell` in the spacemacs `private` folder:
