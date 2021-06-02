@@ -199,8 +199,9 @@ function prettyPrint(obj) {
 
 /** pathString: absolute path to a js file descending from the extension root */
 function findExtensionRoot(pathString) {
-    let path = Gio.file_new_for_path(pathString);
-    let dir = path.get_parent();
+    let dir = Gio.file_new_for_path(pathString);
+    if (!GLib.file_test(pathString, GLib.FileTest.IS_DIR))
+        dir = dir.get_parent();
 
     while (dir !== null) {
         let metadata = dir.get_child("metadata.json");
@@ -548,11 +549,38 @@ function Reload(code, path) {
         return [false, 'Not in a valid extension'];
     }
 
+    let modules = [[code, path]];
+    if (path === root) {
+        modules = extensionImports.extension.modules.map(m => {
+            let module = extensionImports[m];
+            let file = module.__file__;
+            let [ok, code] = GLib.file_get_contents(file);
+            return [code, file];
+        });
+    }
+
+    // Guard against syntax errors
+    for (let [code, path] of modules) {
+        try {
+            Reflect.parse(code);
+        } catch(e) {
+            // We know there's a syntax error, so let Eval take care of error location
+            return Eval(code, path);
+        }
+    }
+
     // Disable the extension
     extensionImports.extension.disable();
 
-    // Reload the code
-    const [evalSuccess, result] = Eval(code, path);
+    let evalSuccess, result;
+    for (let [code, path] of modules) {
+        try {
+            [evalSuccess, result] = Eval(code, path);
+        } catch(e) {
+            return [evalSuccess, result];
+        }
+    }
+
     // Enable the extension again
     extensionImports.extension.enable();
     return [evalSuccess, result];
@@ -562,7 +590,12 @@ function Reload(code, path) {
    Run extension.disable and then restart Gnome Shell
  */
 function Restart(path) {
-    let [type, extensionImports, _] = findExtensionImports(path);
+    let [type, extensionImports, root] = findExtensionImports(path);
+
+    if (imports.gi.Meta.is_wayland_compositor()) {
+        return Reload(null, root);
+    }
+
     if (type !== 'extension')
         return;
     extensionImports.extension.disable();
