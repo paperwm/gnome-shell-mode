@@ -610,7 +610,7 @@ function findExtension(projectRoot) {
     let metadataFile = `${projectRoot}/metadata.json`;
     if (GLib.file_test(metadataFile, GLib.FileTest.IS_REGULAR)) {
         const [success, metadata] = GLib.file_get_contents(metadataFile);
-        let uuid = JSON.parse(metadata.toString()).uuid;
+        let uuid = JSON.parse(new TextDecoder().decode(metadata)).uuid;
         if (uuid === undefined)
             return false;
         if (imports.misc.extensionUtils.extensions) {
