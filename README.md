@@ -116,6 +116,28 @@ See `gnome-shell-mode-pkg.el` and `company-gnome-shell.el` for list of dependenc
 
 NB: The rest of the readme describe the keybindings defined by the spacemacs layer. Some vanilla emacs bindings are also defined by default. See the bottom of `gnome-shell-mode.el`. 
 
+## Initial Setup
+
+NOTE: For older gnome versions this is not needed. But it is required for at least Gnome 43.
+
+This is only required the very first time you use the gnome-shell-mode, because we install a gnome extensions (called gnome-shell-mode) that is required to provide the functionality of gnome-shell-mode.
+
+The first time you use gnome-shell-mode you need to enable `unsafe_mode` in the gnome-shell. You can do this by executing the following in LookingGlass (i.e. hit <kbd>Alt+F2</kbd>, type `lg` and <kbd>Enter</kbd>):
+
+``` javascript
+global.context.unsafe_mode = true
+```
+
+Then start Emacs and use one of the functions/keybindings of gnome-shell-mode.
+
+Afterwards that you can disable `unsafe_mode` again and gnome-shell-mode should continue to work.
+
+If you skip this step you will see an error similar to the following in Emacs and none of the functionality of gnome-shell-mode will work:
+
+```
+dbus-call-method: D-Bus error: "org.freedesktop.DBus.Error.UnknownMethod", "Object does not exist at path “/gnome/shell/mode”"
+```
+
 ## Usage
 
 Make sure you're in gnome-shell-mode (eg. by using <kbd>M-x gnome-shell-mode</kbd>). All the actions will then be under the major-mode leader key (<kbd>M-m</kbd> or <kbd>,</kbd>).
