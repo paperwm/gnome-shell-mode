@@ -106,7 +106,7 @@ Then add this to `init.el`:
 
     (require 'gnome-shell-mode)
     (require 'company-gnome-shell)
-    
+
     ;; Most staight forward but might mess up company in other modes?
     (eval-after-load "company"
      (add-to-list 'company-backends 'company-gnome-shell))
@@ -120,9 +120,9 @@ NB: The rest of the readme describe the keybindings defined by the spacemacs lay
 
 NOTE: For older gnome versions this is not needed. But it is required for at least Gnome 43.
 
-This is only required the very first time you use the gnome-shell-mode, because we install a gnome extensions (called gnome-shell-mode) that is required to provide the functionality of gnome-shell-mode.
+This is required because we install a gnome extensions (called gnome-shell-mode) that is required to provide the functionality of gnome-shell-mode.
 
-The first time you use gnome-shell-mode you need to enable `unsafe_mode` in the gnome-shell. You can do this by executing the following in LookingGlass (i.e. hit <kbd>Alt+F2</kbd>, type `lg` and <kbd>Enter</kbd>):
+You need to enable `unsafe_mode` in the gnome-shell. You can do this by executing the following in LookingGlass (i.e. hit <kbd>Alt+F2</kbd>, type `lg` and <kbd>Enter</kbd>):
 
 ``` javascript
 global.context.unsafe_mode = true
@@ -140,7 +140,7 @@ dbus-call-method: D-Bus error: "org.freedesktop.DBus.Error.UnknownMethod", "Obje
 
 ## Usage
 
-Make sure you're in gnome-shell-mode (eg. by using <kbd>M-x gnome-shell-mode</kbd>). All the actions will then be under the major-mode leader key (<kbd>M-m</kbd> or <kbd>,</kbd>).
+Make sure you're in gnome-shell-mode (e.g. by using <kbd>M-x gnome-shell-mode</kbd>). All the actions will then be under the major-mode leader key (<kbd>M-m</kbd> or <kbd>,</kbd>).
 
 For instance <kbd>,sf</kbd> will evaluate the surrounding function and the evaluated region will pulse green or red depending on the success of the evaluation. If an error occurred, the position reported by gjs will be marked as a flycheck error.
 
