@@ -106,7 +106,7 @@ Then add this to `init.el`:
 
     (require 'gnome-shell-mode)
     (require 'company-gnome-shell)
-    
+
     ;; Most staight forward but might mess up company in other modes?
     (eval-after-load "company"
      (add-to-list 'company-backends 'company-gnome-shell))
@@ -116,9 +116,31 @@ See `gnome-shell-mode-pkg.el` and `company-gnome-shell.el` for list of dependenc
 
 NB: The rest of the readme describe the keybindings defined by the spacemacs layer. Some vanilla emacs bindings are also defined by default. See the bottom of `gnome-shell-mode.el`. 
 
+## Initial Setup
+
+NOTE: For older gnome versions this is not needed. But it is required for at least Gnome 43.
+
+This is required because we install a gnome extensions (called gnome-shell-mode) that is required to provide the functionality of gnome-shell-mode.
+
+You need to enable `unsafe_mode` in the gnome-shell. You can do this by executing the following in LookingGlass (i.e. hit <kbd>Alt+F2</kbd>, type `lg` and <kbd>Enter</kbd>):
+
+``` javascript
+global.context.unsafe_mode = true
+```
+
+Then start Emacs and use one of the functions/keybindings of gnome-shell-mode.
+
+Afterwards that you can disable `unsafe_mode` again and gnome-shell-mode should continue to work.
+
+If you skip this step you will see an error similar to the following in Emacs and none of the functionality of gnome-shell-mode will work:
+
+```
+dbus-call-method: D-Bus error: "org.freedesktop.DBus.Error.UnknownMethod", "Object does not exist at path “/gnome/shell/mode”"
+```
+
 ## Usage
 
-Make sure you're in gnome-shell-mode (eg. by using <kbd>M-x gnome-shell-mode</kbd>). All the actions will then be under the major-mode leader key (<kbd>M-m</kbd> or <kbd>,</kbd>).
+Make sure you're in gnome-shell-mode (e.g. by using <kbd>M-x gnome-shell-mode</kbd>). All the actions will then be under the major-mode leader key (<kbd>M-m</kbd> or <kbd>,</kbd>).
 
 For instance <kbd>,sf</kbd> will evaluate the surrounding function and the evaluated region will pulse green or red depending on the success of the evaluation. If an error occurred, the position reported by gjs will be marked as a flycheck error.
 

@@ -3,5 +3,5 @@
   "name": "gnome-shell-mode",
   "description": "Javascript server for emacs",
   "url": "https://github.com/paperwm/gnome-shell-mode",
-  "shell-version": [ "3.22", "3.24", "3.26" ]
+  "shell-version": [ "3.22", "3.24", "3.26", "40", "41", "42", "43" ]
 }
